@@ -13,12 +13,37 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { categories, menuItems } from "@/lib/mock-data";
+// import { categories, menuItems } from "@/lib/mock-data";
 import { MenuItemCard } from "@/components/customer/menu-item-card";
 import { AnimatedSection } from "@/components/ui/animated-section";
+import { apiClient, Category, MenuItemWithCategory } from "@/lib/api-client";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const featuredItems = menuItems.slice(0, 4);
+  const [categories, setCategories] = useState<Category[]>([])
+  const [menuItems, setMenuItems] = useState<MenuItemWithCategory[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [categoriesData, menuItemsData] = await Promise.all([
+          apiClient.getCategories(),
+          apiClient.getMenuItems({ availableOnly: true })
+        ])
+        setCategories(categoriesData)
+        setMenuItems(menuItemsData)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  const featuredItems = menuItems.slice(0, 4)
 
   return (
     <div>

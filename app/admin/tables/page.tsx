@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Users, MapPin, Plus, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,13 +14,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { tables as initialTables } from '@/lib/mock-data'
-import { Table } from '@/lib/types'
+import { Table, apiClient } from '@/lib/api-client'
+import { useAdmin } from '@/lib/admin-context'
+import { api } from '@/lib/api'
 
 export default function TablesPage() {
-  const [tables, setTables] = useState(initialTables)
+  const { token } = useAdmin()
+  const [tables, setTables] = useState<Table[]>([])
   const [editingTable, setEditingTable] = useState<Table | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!token) return
+
+      try {
+        const tablesData = await api.tables.getAll(token)
+        setTables(tablesData)
+      } catch (error) {
+        console.error('Failed to fetch tables:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [token])
 
   const statusColors: Record<Table['status'], string> = {
     available: 'bg-green-100 text-green-800 border-green-200',
@@ -32,24 +53,46 @@ export default function TablesPage() {
     statusFilter === 'all' || table.status === statusFilter
   )
 
-  const updateTableStatus = (tableId: string, status: Table['status']) => {
-    setTables(prev => prev.map(t => 
-      t.id === tableId ? { ...t, status } : t
-    ))
-  }
+  const updateTableStatus = async (tableId: number, status: string) => {
+    if (!token) return
 
-  const deleteTable = (tableId: string) => {
-    setTables(prev => prev.filter(t => t.id !== tableId))
-  }
-
-  const handleSaveTable = (table: Table) => {
-    if (editingTable) {
-      setTables(prev => prev.map(t => t.id === table.id ? table : t))
-    } else {
-      setTables(prev => [...prev, { ...table, id: String(Date.now()) }])
+    try {
+      await api.tables.updateStatus(tableId, status, token)
+      setTables(prev => prev.map(t =>
+        t.id === tableId ? { ...t, status: status as Table['status'] } : t
+      ))
+    } catch (error) {
+      console.error('Failed to update table status:', error)
     }
-    setEditingTable(null)
-    setIsAddDialogOpen(false)
+  }
+
+  const deleteTable = async (tableId: number) => {
+    if (!token) return
+
+    try {
+      await apiClient.deleteTable(tableId, token)
+      setTables(prev => prev.filter(t => t.id !== tableId))
+    } catch (error) {
+      console.error('Failed to delete table:', error)
+    }
+  }
+
+  const handleSaveTable = async (table: Table) => {
+    if (!token) return
+
+    try {
+      if (editingTable) {
+        await apiClient.updateTable(table.id, table, token)
+        setTables(prev => prev.map(t => t.id === table.id ? table : t))
+      } else {
+        const newTable = await apiClient.createTable(table, token)
+        setTables(prev => [...prev, newTable])
+      }
+      setEditingTable(null)
+      setIsAddDialogOpen(false)
+    } catch (error) {
+      console.error('Failed to save table:', error)
+    }
   }
 
   const availableCount = tables.filter(t => t.status === 'available').length

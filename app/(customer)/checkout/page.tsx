@@ -14,11 +14,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCart } from '@/lib/cart-context'
+import { apiClient } from '@/lib/api-client'
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, subtotal, tax, total, clearCart } = useCart()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<String | null>(null)
   const [orderType, setOrderType] = useState<'takeaway' | 'dine-in'>('takeaway')
   
   const [formData, setFormData] = useState({
@@ -53,16 +55,37 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate order submission
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Generate order number
-    const orderNumber = `ORD-${String(Date.now()).slice(-6)}`
-    
-    // Clear cart and redirect
-    clearCart()
-    router.push(`/order-confirmation?order=${orderNumber}`)
+    setError(null)
+
+    try {
+      // Map cart items to OrderItemCreate format
+      const orderItems = items.map(item => ({
+        menu_item_id: item.menu_item.id,
+        quantity: item.quantity,
+        special_instructions: item.special_instructions || undefined,
+      }))
+
+      // Create order data
+      const orderData = {
+        customer_name: formData.name,
+        customer_email: formData.email || undefined,
+        customer_phone: formData.phone,
+        order_type: (orderType === 'dine-in' ? 'dine_in' : 'takeaway') as 'takeaway' | 'dine_in',
+        special_instructions: formData.specialInstructions || undefined,
+        items: orderItems,
+      }
+
+      // Call API to create order
+      const createdOrder = await apiClient.createOrder(orderData)
+
+      // Clear cart and redirect with real order number
+      clearCart()
+      router.push(`/order-confirmation?order=${createdOrder.order_number}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to place order. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -240,17 +263,21 @@ export default function CheckoutPage() {
                     <span className="text-foreground">₹{total.toFixed(2)}</span>
                   </div>
                   
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
+                  <Button
+                    type="submit"
+                    className="w-full"
                     size="lg"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Placing Order...' : 'Place Order'}
                   </Button>
-                  
+
+                  {error && (
+                    <p className="text-sm text-red-600 text-center mt-2">{error}</p>
+                  )}
+
                   <p className="text-xs text-muted-foreground text-center">
-                    {orderType === 'takeaway' 
+                    {orderType === 'takeaway'
                       ? 'Your order will be ready for pickup in 20-30 minutes'
                       : 'Your order will be prepared once you arrive'
                     }

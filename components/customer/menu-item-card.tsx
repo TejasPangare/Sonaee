@@ -5,7 +5,7 @@ import { Plus, Minus, Leaf, Flame, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MenuItem } from '@/lib/types'
+import { MenuItem } from '@/lib/api-client'
 import { useCart } from '@/lib/cart-context'
 import { useState } from 'react'
 
@@ -17,7 +17,7 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
   const { items, addItem, updateQuantity } = useCart()
   const [imageError, setImageError] = useState(false)
   
-  const cartItem = items.find(ci => ci.menu_item.id === item.id)
+  const cartItem = items.find(ci => Number(ci.menu_item.id) === item.id)
   const quantity = cartItem?.quantity || 0
 
   const handleAdd = () => {
@@ -25,11 +25,11 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
   }
 
   const handleIncrement = () => {
-    updateQuantity(item.id, quantity + 1)
+    updateQuantity(Number(item.id), quantity + 1)
   }
 
   const handleDecrement = () => {
-    updateQuantity(item.id, quantity - 1)
+    updateQuantity(Number(item.id), quantity - 1)
   }
 
   return (
@@ -84,7 +84,7 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
           )}
           <span className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
             <Clock className="w-3 h-3" />
-            {item.preparation_time}m
+            {item.prep_time_minutes}m
           </span>
         </div>
         

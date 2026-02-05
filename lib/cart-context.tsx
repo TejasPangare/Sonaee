@@ -1,14 +1,14 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import { CartItem, MenuItem } from './types'
+import { CartItem,MenuItem } from './api-client'
 
 interface CartContextType {
   items: CartItem[]
   addItem: (item: MenuItem, quantity?: number, instructions?: string) => void
-  removeItem: (itemId: string) => void
-  updateQuantity: (itemId: string, quantity: number) => void
-  updateInstructions: (itemId: string, instructions: string) => void
+  removeItem: (itemId: number) => void
+  updateQuantity: (itemId: number, quantity: number) => void
+  updateInstructions: (itemId: number, instructions: string) => void
   clearCart: () => void
   itemCount: number
   subtotal: number
@@ -25,7 +25,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((menuItem: MenuItem, quantity = 1, instructions?: string) => {
     setItems(prev => {
-      const existingIndex = prev.findIndex(item => item.menu_item.id === menuItem.id)
+      const existingIndex = prev.findIndex(item => Number(item.menu_item.id )=== menuItem.id)
       if (existingIndex >= 0) {
         const updated = [...prev]
         updated[existingIndex] = {
@@ -38,26 +38,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const removeItem = useCallback((itemId: string) => {
-    setItems(prev => prev.filter(item => item.menu_item.id !== itemId))
+  const removeItem = useCallback((itemId: number) => {
+    setItems(prev => prev.filter(item => Number(item.menu_item.id)!== itemId))
   }, [])
 
-  const updateQuantity = useCallback((itemId: string, quantity: number) => {
+  const updateQuantity = useCallback((itemId: number, quantity: number) => {
     if (quantity <= 0) {
       removeItem(itemId)
       return
     }
     setItems(prev => 
       prev.map(item => 
-        item.menu_item.id === itemId ? { ...item, quantity } : item
+        Number(item.menu_item.id) === itemId ? { ...item, quantity } : item
       )
     )
   }, [removeItem])
 
-  const updateInstructions = useCallback((itemId: string, instructions: string) => {
+  const updateInstructions = useCallback((itemId: number, instructions: string) => {
     setItems(prev => 
       prev.map(item => 
-        item.menu_item.id === itemId ? { ...item, special_instructions: instructions } : item
+        Number(item.menu_item.id) === itemId ? { ...item, special_instructions: instructions } : item
       )
     )
   }, [])

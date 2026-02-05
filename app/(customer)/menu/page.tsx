@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { CategoryTabs } from "@/components/customer/category-tabs"
 import { MenuItemCard } from "@/components/customer/menu-item-card"
-import { categories, menuItems } from "@/lib/mock-data"
 import { AnimatedSection } from "@/components/ui/animated-section"
+import { apiClient, Category, MenuItemWithCategory } from "@/lib/api-client"
 
 export default function MenuPage() {
   const searchParams = useSearchParams()
@@ -15,24 +15,46 @@ export default function MenuPage() {
 
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState("")
+  const [categories, setCategories] = useState<Category[]>([])
+  const [menuItems, setMenuItems] = useState<MenuItemWithCategory[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [categoriesData, menuItemsData] = await Promise.all([
+          apiClient.getCategories(),
+          apiClient.getMenuItems({ availableOnly: true })
+        ])
+        setCategories(categoriesData)
+        setMenuItems(menuItemsData)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const filteredItems = useMemo(() => {
     let items = menuItems.filter((item) => item.is_available)
 
     if (activeCategory !== "all") {
-      items = items.filter((item) => item.category_id === activeCategory)
+      items = items.filter((item) => item.category_id === parseInt(activeCategory))
     }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       items = items.filter(
         (item) =>
-          item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
+          item.name.toLowerCase().includes(query) || item.description?.toLowerCase().includes(query)
       )
     }
 
     return items
-  }, [activeCategory, searchQuery])
+  }, [activeCategory, searchQuery, menuItems])
 
   const activeCategories = categories.filter((c) => c.is_active)
 

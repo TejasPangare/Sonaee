@@ -410,5 +410,11 @@ export interface DashboardStats {
   occupied_tables: number;
 }
 
+export interface CartItem {
+  menu_item: MenuItem
+  quantity: number
+  special_instructions?: string
+}
+
 // Export singleton instance
 export const apiClient = new ApiClient(API_BASE_URL);

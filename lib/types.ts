@@ -23,11 +23,7 @@ export interface MenuItem {
   display_order: number
 }
 
-export interface CartItem {
-  menu_item: MenuItem
-  quantity: number
-  special_instructions?: string
-}
+
 
 export interface Table {
   id: string

@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { orders, tables } from "@/lib/mock-data";
+
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAdmin } from "@/lib/admin-context";
@@ -103,7 +103,7 @@ useEffect(() => {
                 ₹{totalRevenue.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="text-green-600">+12.5%</span> from yesterday
+                {/* <span className="text-green-600">+12.5%</span> from yesterday */}
               </p>
             </CardContent>
           </Card>
@@ -158,7 +158,7 @@ useEffect(() => {
                   : "0.00"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="text-green-600">+5.2%</span> from last week
+                {/* <span className="text-green-600">+5.2%</span> from last week */}
               </p>
             </CardContent>
           </Card>

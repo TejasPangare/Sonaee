@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, Filter, ShoppingBag, Users, Phone, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,12 +11,48 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AdminShell } from '@/components/admin/admin-shell'
 import { orders as initialOrders, tables } from '@/lib/mock-data'
 import { Order } from '@/lib/types'
+import { useAdmin } from '@/lib/admin-context'
+import { OrderWithItems, Table } from '@/lib/api-client'
+import { api } from '@/lib/api'
+
+
+type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "preparing"
+  | "ready"
+  | "completed"
+  | "cancelled";
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(initialOrders)
+  const { token } = useAdmin()
+  const [orders, setOrders] = useState<OrderWithItems[]>([])
+  const [tables, setTables] = useState<Table[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!token) return
+
+      try {
+        const [ordersData, tablesData] = await Promise.all([
+          api.orders.getAll(token),
+          api.tables.getAll(token)
+        ])
+        setOrders(ordersData)
+        setTables(tablesData)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [token])
 
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -36,18 +72,25 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus
   })
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(prev => prev.map(o => 
-      o.id === orderId ? { ...o, status: newStatus, updated_at: new Date().toISOString() } : o
-    ))
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null)
+  const updateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
+    if (!token) return
+
+    try {
+      await api.orders.updateStatus(orderId, { status: newStatus }, token)
+      setOrders(prev => prev.map(o =>
+        o.id === orderId ? { ...o, status: newStatus, updated_at: new Date().toISOString() } : o
+      ))
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null)
+      }
+    } catch (error) {
+      console.error('Failed to update order status:', error)
     }
   }
 
   const getTableNumber = (tableId?: string) => {
     if (!tableId) return null
-    const table = tables.find(t => t.id === tableId)
+    const table = tables.find(t => String(t.id) == tableId)
     return table?.table_number
   }
 
@@ -125,8 +168,8 @@ export default function OrdersPage() {
                             <Phone className="w-3 h-3" />
                             {order.customer_phone}
                           </span>
-                          {order.order_type === 'dine-in' && order.table_id && (
-                            <span>Table {getTableNumber(order.table_id)}</span>
+                          {order.order_type == 'dine_in' && order.table_id && (
+                            <span>Table {getTableNumber(String(order.table_id))}</span>
                           )}
                         </div>
                       </div>
@@ -135,7 +178,7 @@ export default function OrdersPage() {
                     {/* Items Summary */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-muted-foreground line-clamp-2">
-                        {order.items.map(i => `${i.quantity}x ${i.menu_item_name}`).join(', ')}
+                        {order.items.map(i => `${i.quantity}x ${i.menu_item.name}`).join(', ')}
                       </p>
                     </div>
 
@@ -172,7 +215,7 @@ export default function OrdersPage() {
           <DialogHeader>
             <DialogTitle>Order {selectedOrder?.order_number}</DialogTitle>
             <DialogDescription>
-              {selectedOrder?.order_type === 'takeaway' ? 'Takeaway Order' : `Dine-in - Table ${getTableNumber(selectedOrder?.table_id)}`}
+              {selectedOrder?.order_type === 'takeaway' ? 'Takeaway Order' : `Dine-in - Table ${getTableNumber(String(selectedOrder?.table_id))}`}
             </DialogDescription>
           </DialogHeader>
           
@@ -195,7 +238,7 @@ export default function OrdersPage() {
                   {selectedOrder.items.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
-                        {item.quantity}x {item.menu_item_name}
+                        {item.quantity}x {item.menu_item.name}
                       </span>
                       <span className="text-foreground">₹{item.total_price.toFixed(2)}</span>
                     </div>
