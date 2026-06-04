@@ -1,21 +1,28 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, TypedDict
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-import os
 
 from .database import get_db
 from . import models, schemas
+from .config import settings
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.jwt_algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+
+
+class CustomerIdentity(TypedDict):
+    customer_id: int
+    full_name: str
+    email: str
+    phone: str
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -55,10 +62,15 @@ async def get_current_admin(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if not token:
+        raise credentials_exception
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
+            raise credentials_exception
+        role = payload.get("role")
+        if role == "customer":
             raise credentials_exception
     except JWTError:
         raise credentials_exception
@@ -72,3 +84,121 @@ async def get_current_admin(
             detail="Admin account is deactivated"
         )
     return admin
+
+
+async def get_current_customer(
+    token: str = Depends(oauth2_scheme),
+) -> str:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if not token:
+        raise credentials_exception
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        role = payload.get("role")
+        if role is not None and role != "customer":
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    return email
+
+
+async def get_optional_customer(
+    token: str = Depends(oauth2_scheme),
+) -> Optional[str]:
+    if not token:
+        return None
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if not email:
+            raise credentials_exception
+        role = payload.get("role")
+        if role is not None and role != "customer":
+            raise credentials_exception
+        return email
+    except JWTError:
+        raise credentials_exception
+
+
+async def get_current_customer_phone(
+    token: str = Depends(oauth2_scheme),
+) -> str:
+    """Extract phone number from customer JWT token"""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if not token:
+        raise credentials_exception
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        phone: str = payload.get("phone")
+        if phone is None:
+            raise credentials_exception
+        role = payload.get("role")
+        if role is not None and role != "customer":
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    return phone
+
+
+async def get_optional_customer_identity(
+    token: str = Depends(oauth2_scheme),
+) -> Optional[CustomerIdentity]:
+    if not token:
+        return None
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        customer_id = payload.get("customer_id")
+        full_name: str = payload.get("name")
+        email: str = payload.get("sub")
+        phone: str = payload.get("phone")
+        role = payload.get("role")
+
+        if not customer_id or not full_name or not email or not phone or role != "customer":
+            raise credentials_exception
+
+        return {
+            "customer_id": int(customer_id),
+            "full_name": full_name,
+            "email": email,
+            "phone": phone,
+        }
+    except JWTError:
+        raise credentials_exception
+
+
+async def get_current_customer_identity(
+    token: str = Depends(oauth2_scheme),
+) -> CustomerIdentity:
+    identity = await get_optional_customer_identity(token)
+    if not identity:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return identity

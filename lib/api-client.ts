@@ -197,10 +197,11 @@ class ApiClient {
     return this.request<OrderWithItems>(`/api/orders/by-number/${orderNumber}`);
   }
 
-  async createOrder(data: OrderCreate) {
+  async createOrder(data: OrderCreate, token?: string) {
     return this.request<OrderWithItems>('/api/orders', {
       method: 'POST',
       body: JSON.stringify(data),
+      token,
     });
   }
 
@@ -217,6 +218,33 @@ class ApiClient {
     return this.request<{ access_token: string; token_type: string }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    });
+  }
+
+  // Customer auth
+  async customerLogin(email: string, phone: string) {
+    return this.request<{ access_token: string; token_type: string }>('/api/customers/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, phone }),
+    });
+  }
+
+  async customerRegister(data: CustomerRegisterRequest) {
+    return this.request<{ access_token: string; token_type: string }>('/api/customers/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Customer-specific order endpoints
+  async getMyOrders(token: string) {
+    return this.request<OrderWithItems[]>('/api/orders/my', { token });
+  }
+
+  async cancelOrder(orderId: number, token: string) {
+    return this.request<OrderWithItems>(`/api/orders/${orderId}/cancel`, {
+      method: 'POST',
+      token,
     });
   }
 
@@ -349,9 +377,7 @@ export interface OrderItem {
 export interface Order {
   id: number;
   order_number: string;
-  customer_name: string;
-  customer_email?: string;
-  customer_phone: string;
+  customer_id: number;
   order_type: 'takeaway' | 'dine_in';
   table_id?: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled';
@@ -364,7 +390,18 @@ export interface Order {
   updated_at?: string;
 }
 
+export interface Customer {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface OrderWithItems extends Order {
+  customer: Customer;
   items: OrderItem[];
   table?: Table;
 }
@@ -376,13 +413,11 @@ export interface OrderItemCreate {
 }
 
 export interface OrderCreate {
-  customer_name: string;
-  customer_email?: string;
-  customer_phone: string;
   order_type: 'takeaway' | 'dine_in';
   table_id?: number;
   special_instructions?: string;
   items: OrderItemCreate[];
+  fcm_token?: string | null;
 }
 
 export interface OrderUpdate {
@@ -399,6 +434,12 @@ export interface Admin {
   is_superadmin: boolean;
   created_at: string;
   updated_at?: string;
+}
+
+export interface CustomerRegisterRequest {
+  full_name: string;
+  email: string;
+  phone: string;
 }
 
 export interface DashboardStats {

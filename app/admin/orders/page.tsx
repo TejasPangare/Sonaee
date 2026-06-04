@@ -66,8 +66,8 @@ export default function OrdersPage() {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number.toLowerCase().includes(search.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-      order.customer_phone.includes(search)
+      order.customer.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      order.customer.phone.includes(search)
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -162,11 +162,11 @@ export default function OrdersPage() {
                             {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">{order.customer_name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{order.customer.full_name}</p>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Phone className="w-3 h-3" />
-                            {order.customer_phone}
+                            {order.customer.phone}
                           </span>
                           {order.order_type == 'dine_in' && order.table_id && (
                             <span>Table {getTableNumber(String(order.table_id))}</span>
@@ -225,9 +225,9 @@ export default function OrdersPage() {
               <div className="space-y-2">
                 <h4 className="font-medium text-foreground">Customer</h4>
                 <div className="text-sm text-muted-foreground">
-                  <p>{selectedOrder.customer_name}</p>
-                  <p>{selectedOrder.customer_phone}</p>
-                  {selectedOrder.customer_email && <p>{selectedOrder.customer_email}</p>}
+                  <p>{selectedOrder.customer.full_name}</p>
+                  <p>{selectedOrder.customer.phone}</p>
+                  <p>{selectedOrder.customer.email}</p>
                 </div>
               </div>
 

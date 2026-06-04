@@ -171,6 +171,7 @@ def get_orders(
     date_to: Optional[datetime] = None
 ):
     query = db.query(models.Order).options(
+        joinedload(models.Order.customer),
         joinedload(models.Order.items).joinedload(models.OrderItem.menu_item),
         joinedload(models.Order.table)
     )
@@ -189,6 +190,7 @@ def get_orders(
 
 def get_order(db: Session, order_id: int):
     return db.query(models.Order).options(
+        joinedload(models.Order.customer),
         joinedload(models.Order.items).joinedload(models.OrderItem.menu_item),
         joinedload(models.Order.table)
     ).filter(models.Order.id == order_id).first()
@@ -196,12 +198,40 @@ def get_order(db: Session, order_id: int):
 
 def get_order_by_number(db: Session, order_number: str):
     return db.query(models.Order).options(
+        joinedload(models.Order.customer),
         joinedload(models.Order.items).joinedload(models.OrderItem.menu_item),
         joinedload(models.Order.table)
     ).filter(models.Order.order_number == order_number).first()
 
 
-def create_order(db: Session, order: schemas.OrderCreate):
+def get_customer_by_id(db: Session, customer_id: int):
+    return db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+
+
+def get_customer_by_email(db: Session, email: str):
+    return db.query(models.Customer).filter(models.Customer.email == email).first()
+
+
+def get_customer_by_phone(db: Session, phone: str):
+    return db.query(models.Customer).filter(models.Customer.phone == phone).first()
+
+
+def get_customer_by_email_and_phone(db: Session, email: str, phone: str):
+    return db.query(models.Customer).filter(
+        models.Customer.email == email,
+        models.Customer.phone == phone,
+    ).first()
+
+
+def create_customer(db: Session, customer: schemas.CustomerCreate):
+    db_customer = models.Customer(**customer.model_dump())
+    db.add(db_customer)
+    db.commit()
+    db.refresh(db_customer)
+    return db_customer
+
+
+def create_order(db: Session, order: schemas.OrderCreate, customer_id: int):
     # Calculate totals
     subtotal = 0.0
     order_items = []
@@ -225,19 +255,22 @@ def create_order(db: Session, order: schemas.OrderCreate):
     
     tax = subtotal * 0.1  # 10% tax
     total = subtotal + tax
+
+    customer = get_customer_by_id(db, customer_id)
+    if not customer:
+        raise ValueError("Customer not found")
     
     # Create order
     db_order = models.Order(
         order_number=generate_order_number(),
-        customer_name=order.customer_name,
-        customer_email=order.customer_email,
-        customer_phone=order.customer_phone,
+        customer_id=customer.id,
         order_type=order.order_type,
         table_id=order.table_id,
         special_instructions=order.special_instructions,
         subtotal=subtotal,
         tax=tax,
         total=total,
+        fcm_token=order.fcm_token if order.fcm_token else None,
         estimated_ready_time=datetime.now() + timedelta(minutes=30)
     )
     db.add(db_order)

@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime
 
 from ..database import get_db
-from .. import crud, schemas
-from ..auth import get_current_admin
+from .. import crud, schemas, models
+from ..auth import get_current_admin, get_current_customer_identity
+from ..push import send_push
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -33,16 +34,32 @@ def list_orders(
     )
 
 
-@router.get("/{order_id}", response_model=schemas.OrderWithItems)
-def get_order(
-    order_id: int,
-    db: Session = Depends(get_db)
+@router.post("/", response_model=schemas.OrderWithItems)
+def create_order(
+    order: schemas.OrderCreate,
+    db: Session = Depends(get_db),
+    customer_identity: dict[str, str | int] = Depends(get_current_customer_identity)
 ):
-    """Get a specific order by ID"""
-    order = crud.get_order(db, order_id)
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    return order
+    """Create a new order for the authenticated customer."""
+    try:
+        return crud.create_order(db, order, customer_id=int(customer_identity["customer_id"]))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/my", response_model=List[schemas.OrderWithItems])
+def get_my_orders(
+    db: Session = Depends(get_db),
+    customer_identity: dict[str, str | int] = Depends(get_current_customer_identity)
+):
+    """Get orders for the currently authenticated customer."""
+    orders = db.query(models.Order).options(
+        joinedload(models.Order.customer),
+        joinedload(models.Order.items).joinedload(models.OrderItem.menu_item),
+        joinedload(models.Order.table)
+    ).filter(models.Order.customer_id == int(customer_identity["customer_id"])).order_by(models.Order.created_at.desc()).all()
+    print(f"[ORDERS] Retrieved {len(orders)} orders for customer id={customer_identity['customer_id']}")
+    return orders
 
 
 @router.get("/by-number/{order_number}", response_model=schemas.OrderWithItems)
@@ -57,16 +74,42 @@ def get_order_by_number(
     return order
 
 
-@router.post("/", response_model=schemas.OrderWithItems)
-def create_order(
-    order: schemas.OrderCreate,
+@router.get("/{order_id}", response_model=schemas.OrderWithItems)
+def get_order(
+    order_id: int,
     db: Session = Depends(get_db)
 ):
-    """Create a new order (public endpoint)"""
-    try:
-        return crud.create_order(db, order)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    """Get a specific order by ID"""
+    order = crud.get_order(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return order
+
+
+@router.post("/{order_id}/cancel", response_model=schemas.OrderWithItems)
+def cancel_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    customer_identity: dict[str, str | int] = Depends(get_current_customer_identity)
+):
+    """Allow a customer to cancel their own order if still pending"""
+    order = crud.get_order(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.customer_id != int(customer_identity["customer_id"]):
+        raise HTTPException(status_code=403, detail="Not authorized to cancel this order")
+    if order.status != schemas.OrderStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Only pending orders can be cancelled")
+
+    order.status = schemas.OrderStatus.CANCELLED
+    if order.table_id:
+        table = crud.get_table(db, order.table_id)
+        if table:
+            table.status = models.TableStatus.AVAILABLE
+
+    db.commit()
+    db.refresh(order)
+    return crud.get_order(db, order_id)
 
 
 @router.patch("/{order_id}/status", response_model=schemas.OrderWithItems)
@@ -80,6 +123,12 @@ def update_order_status(
     order = crud.update_order_status(db, order_id, order_update)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    if order.fcm_token:
+        send_push(
+            token=order.fcm_token,
+            title="Order Update",
+            body=f"Your order is now {order.status}"
+        )
     return order
 
 

@@ -191,7 +191,7 @@ useEffect(() => {
                           {order.order_number}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {order.customer_name}
+                          {order.customer.full_name}
                         </p>
                       </div>
                     </div>

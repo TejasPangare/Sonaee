@@ -1,8 +1,6 @@
 'use client'
 
-import React from "react"
-
-import { useState } from 'react'
+import React, { useEffect, useState } from "react"
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ShoppingBag, User, Phone, Mail, MessageSquare } from 'lucide-react'
@@ -15,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCart } from '@/lib/cart-context'
 import { apiClient } from '@/lib/api-client'
+import { getPushToken } from "@/lib/getPushToken"
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -22,13 +21,43 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<String | null>(null)
   const [orderType, setOrderType] = useState<'takeaway' | 'dine-in'>('takeaway')
+  const [token, setToken] = useState<string | null>(null)
+  const [customerProfile, setCustomerProfile] = useState<{
+    fullName: string
+    email: string
+    phone: string
+  } | null>(null)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default')
+  const [notificationStatusMessage, setNotificationStatusMessage] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
     specialInstructions: '',
   })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('customer_token')
+      setToken(storedToken)
+      if (storedToken) {
+        try {
+          const payload = JSON.parse(atob(storedToken.split('.')[1]))
+          setCustomerProfile({
+            fullName: payload.name || '',
+            email: payload.sub || '',
+            phone: payload.phone || '',
+          })
+        } catch {
+          setCustomerProfile(null)
+        }
+      }
+
+      if ('Notification' in window) {
+        setNotificationPermission(Notification.permission)
+      } else {
+        setNotificationPermission('unsupported')
+      }
+    }
+  }, [])
 
   if (items.length === 0) {
     return (
@@ -56,6 +85,11 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
+    const pushToken = await getPushToken();
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission)
+    }
 
     try {
       // Map cart items to OrderItemCreate format
@@ -65,18 +99,19 @@ export default function CheckoutPage() {
         special_instructions: item.special_instructions || undefined,
       }))
 
-      // Create order data
-      const orderData = {
-        customer_name: formData.name,
-        customer_email: formData.email || undefined,
-        customer_phone: formData.phone,
+      const orderData: any = {
         order_type: (orderType === 'dine-in' ? 'dine_in' : 'takeaway') as 'takeaway' | 'dine_in',
         special_instructions: formData.specialInstructions || undefined,
         items: orderItems,
       }
 
+      if (pushToken) {
+        orderData.fcm_token = pushToken
+        setNotificationPermission('granted')
+      }
+
       // Call API to create order
-      const createdOrder = await apiClient.createOrder(orderData)
+      const createdOrder = await apiClient.createOrder(orderData, token || undefined)
 
       // Clear cart and redirect with real order number
       clearCart()
@@ -91,6 +126,25 @@ export default function CheckoutPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleEnableNotifications = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationPermission('unsupported')
+      setNotificationStatusMessage('Push notifications are not supported in this browser.')
+      return
+    }
+
+    const pushToken = await getPushToken()
+    setNotificationPermission(Notification.permission)
+
+    if (pushToken) {
+      setNotificationStatusMessage('Notifications enabled for order updates.')
+    } else if (Notification.permission === 'denied') {
+      setNotificationStatusMessage('Permission blocked. Allow notifications in browser settings.')
+    } else {
+      setNotificationStatusMessage('Notifications are not enabled yet.')
+    }
   }
 
   return (
@@ -156,51 +210,60 @@ export default function CheckoutPage() {
                   <CardTitle className="text-lg">Contact Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        name="name"
-                        placeholder="John Smith"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                        className="pl-10"
-                      />
+                  {customerProfile ? (
+                    <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground space-y-2">
+                      <div>
+                        <span className="font-medium text-foreground">{customerProfile.fullName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        <span>{customerProfile.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        <span>{customerProfile.phone}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        required
-                        className="pl-10"
-                      />
+                  ) : (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                      Customer details are unavailable. Please sign in again before placing the order.
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email (Optional)</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="john@example.com"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="pl-10"
-                      />
+                  )}
+
+                  <div className="rounded-lg border border-border bg-muted p-4 text-sm">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium">
+                          Notification status: {' '}
+                          <span className={
+                            notificationPermission === 'granted'
+                              ? 'text-emerald-600'
+                              : notificationPermission === 'denied'
+                              ? 'text-rose-600'
+                              : 'text-foreground'
+                          }>
+                            {notificationPermission === 'unsupported'
+                              ? 'Unsupported'
+                              : notificationPermission === 'granted'
+                              ? 'Enabled'
+                              : notificationPermission === 'denied'
+                              ? 'Blocked'
+                              : 'Not enabled'}
+                          </span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          We use push notifications to alert you when order status changes.
+                        </p>
+                      </div>
+                      {notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
+                        <Button type="button" variant="secondary" size="sm" onClick={handleEnableNotifications}>
+                          Enable
+                        </Button>
+                      )}
                     </div>
+                    {notificationStatusMessage && (
+                      <p className="mt-2 text-xs text-muted-foreground">{notificationStatusMessage}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -267,7 +330,7 @@ export default function CheckoutPage() {
                     type="submit"
                     className="w-full"
                     size="lg"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !token || !customerProfile}
                   >
                     {isSubmitting ? 'Placing Order...' : 'Place Order'}
                   </Button>

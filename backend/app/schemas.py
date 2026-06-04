@@ -158,10 +158,27 @@ class OrderItemWithMenuItem(OrderItem):
 
 
 # Order Schemas
+class CustomerBase(BaseModel):
+    full_name: str
+    email: EmailStr
+    phone: str
+
+
+class CustomerCreate(CustomerBase):
+    pass
+
+
+class Customer(CustomerBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 class OrderBase(BaseModel):
-    customer_name: str
-    customer_email: Optional[EmailStr] = None
-    customer_phone: str
     order_type: OrderType
     table_id: Optional[int] = None
     special_instructions: Optional[str] = None
@@ -169,6 +186,7 @@ class OrderBase(BaseModel):
 
 class OrderCreate(OrderBase):
     items: List[OrderItemCreate]
+    fcm_token: Optional[str] = None
 
 
 class OrderUpdate(BaseModel):
@@ -180,6 +198,7 @@ class OrderUpdate(BaseModel):
 class Order(OrderBase):
     id: int
     order_number: str
+    customer_id: int
     status: OrderStatus
     subtotal: float
     tax: float
@@ -193,6 +212,7 @@ class Order(OrderBase):
 
 
 class OrderWithItems(Order):
+    customer: Customer
     items: List[OrderItemWithMenuItem]
     table: Optional[Table] = None
 
@@ -239,6 +259,15 @@ class TokenData(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class CustomerLoginRequest(BaseModel):
+    email: EmailStr
+    phone: str
+
+
+class CustomerRegisterRequest(CustomerLoginRequest):
+    full_name: str
 
 
 # Dashboard Stats

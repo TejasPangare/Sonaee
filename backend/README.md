@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env with your PostgreSQL connection string
+# Edit .env with your PostgreSQL, JWT, CORS, and Firebase settings
 ```
 
 ### 3. Setup PostgreSQL Database
@@ -37,6 +37,7 @@ python seed_data.py
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
+
 
 The API will be available at `http://localhost:8000`
 
@@ -77,8 +78,14 @@ For production deployment, consider:
    gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
    ```
 
-2. Update CORS origins in `app/main.py` with your frontend URL
+2. Set `ENVIRONMENT=production`
 
-3. Use a secure SECRET_KEY
+3. Set a strong `SECRET_KEY` and production `DATABASE_URL`
 
-4. Consider using Alembic for database migrations
+4. Set `BACKEND_CORS_ORIGINS` to your deployed frontend origin
+
+5. Set `AUTO_CREATE_TABLES=false` and run migrations or schema setup separately
+
+6. Provide Firebase Admin credentials via `FIREBASE_SERVICE_ACCOUNT_KEY_JSON` or `FIREBASE_SERVICE_ACCOUNT_KEY_PATH`
+
+7. Consider using Alembic for database migrations

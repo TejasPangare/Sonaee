@@ -77,14 +77,26 @@ class Table(Base):
     orders = relationship("Order", back_populates="table")
 
 
+class Customer(Base):
+    __tablename__ = "customers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String(200), nullable=False)
+    email = Column(String(200), nullable=False, unique=True, index=True)
+    phone = Column(String(20), nullable=False, unique=True, index=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    orders = relationship("Order", back_populates="customer")
+
+
 class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
     order_number = Column(String(20), nullable=False, unique=True)
-    customer_name = Column(String(200), nullable=False)
-    customer_email = Column(String(200), nullable=True)
-    customer_phone = Column(String(20), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
     order_type = Column(Enum(OrderType), nullable=False)
     table_id = Column(Integer, ForeignKey("tables.id"), nullable=True)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)
@@ -95,7 +107,9 @@ class Order(Base):
     estimated_ready_time = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    fcm_token = Column(String(500), nullable=True)
 
+    customer = relationship("Customer", back_populates="orders")
     table = relationship("Table", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 

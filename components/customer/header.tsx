@@ -1,15 +1,19 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { ShoppingBag, Menu, X, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useCart } from '@/lib/cart-context'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export function Header() {
   const { itemCount } = useCart()
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -17,6 +21,20 @@ export function Header() {
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ]
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsLoggedIn(Boolean(localStorage.getItem('customer_token')))
+    }
+  }, [pathname])
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('customer_token')
+    }
+    setIsLoggedIn(false)
+    router.push('/login')
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -62,6 +80,30 @@ export function Header() {
                 <span className="sr-only">View cart</span>
               </Button>
             </Link>
+
+            {isLoggedIn ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link href="/orders">
+                  <Button variant="outline" size="sm">
+                    My Orders
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link href="/login">
+                  <Button variant="outline" size="sm">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">Register</Button>
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
