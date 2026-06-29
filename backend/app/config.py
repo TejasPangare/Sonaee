@@ -63,7 +63,7 @@ class Settings:
                 raise RuntimeError(
                     "SECRET_KEY must be set when ENVIRONMENT=production."
                 )
-            self.secret_key = "dev-only-secret-key-change-before-deploy"
+            self.secret_key = "hotel-sonaee-secret-key"
 
 
 @lru_cache

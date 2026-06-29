@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@grandhotel.com"
+                  placeholder="admin@sonaeehotel.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -105,12 +105,12 @@ export default function AdminLoginPage() {
             </Button>
           </form>
           
-          <div className="mt-6 p-4 bg-muted rounded-lg">
+          {/* <div className="mt-6 p-4 bg-muted rounded-lg">
             <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials:</p>
             <p className="text-xs text-center font-mono text-foreground">
               admin@grandhotel.com / admin123
             </p>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

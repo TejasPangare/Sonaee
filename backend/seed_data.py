@@ -287,8 +287,8 @@ try:
 
         print("Database seeded successfully!")
         print("\nDefault admin credentials:")
-        print("  Email: admin@grandhotel.com")
-        print("  Password: admin123")
+        print("  Email: admincreds@sonaee.com")
+        print("  Password: admin7171")
 
 finally:
     db.close()
