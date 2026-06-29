@@ -45,7 +45,7 @@ class Settings:
         )
         self.backend_cors_origins = _get_list(
             "BACKEND_CORS_ORIGINS",
-            ["http://localhost:3000"],
+            ["http://localhost:3000","https://sonaee-frontend.onrender.com"],
         )
         self.enable_docs = _get_bool("ENABLE_DOCS", self.environment != "production")
         self.auto_create_tables = _get_bool(
