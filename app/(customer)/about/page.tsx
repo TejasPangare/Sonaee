@@ -1,7 +1,12 @@
+'use client'
+
 import { Award, Users, Clock, Utensils } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { useSiteSettings } from '@/lib/site-settings-context'
 
 export default function AboutPage() {
+  const { settings } = useSiteSettings()
+
   return (
     <div>
       {/* Hero */}
@@ -11,7 +16,7 @@ export default function AboutPage() {
             Our Story
           </h1>
           <p className="text-lg text-sidebar-foreground/80 leading-relaxed max-w-2xl mx-auto">
-            For over two decades, Hotel Sonaee Veg Restaurant has been serving 
+            For over two decades, {settings.hotelName} has been serving 
             exceptional cuisine that brings people together. Our passion for 
             quality ingredients and culinary excellence drives everything we do.
           </p>
@@ -47,7 +52,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">A Legacy of Flavor</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Founded in 2001, Hotel Sonaee Veg Restaurant began with a simple vision: 
+                Founded in 2001, {settings.hotelName} began with a simple vision: 
                 to create a dining experience that celebrates the art of cooking while 
                 making guests feel at home. What started as a small family restaurant 
                 has grown into one of the city&apos;s most beloved culinary destinations.

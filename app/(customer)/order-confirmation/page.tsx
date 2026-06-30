@@ -5,8 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Clock, MapPin, Phone, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useSiteSettings } from '@/lib/site-settings-context'
 
 export default function OrderConfirmationPage() {
+  const { settings } = useSiteSettings()
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order') || 'ORD-000000'
 
@@ -42,7 +44,7 @@ export default function OrderConfirmationPage() {
             <CardContent className="p-6 text-center">
               <MapPin className="w-8 h-8 text-primary mx-auto mb-3" />
               <h3 className="font-semibold text-foreground mb-1">Pickup Location</h3>
-              <p className="text-muted-foreground text-sm">123 Grand Avenue, Downtown</p>
+              <p className="text-muted-foreground text-sm">{settings.address}</p>
             </CardContent>
           </Card>
         </div>
@@ -75,11 +77,11 @@ export default function OrderConfirmationPage() {
               Questions about your order? Call us:
             </p>
             <a
-              href="tel:+15551234567"
+              href={settings.phoneHref}
               className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
             >
               <Phone className="w-4 h-4" />
-              (555) 123-4567
+              {settings.phoneDisplay}
             </a>
           </CardContent>
         </Card>

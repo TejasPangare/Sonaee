@@ -141,3 +141,41 @@ class Admin(Base):
     is_superadmin = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class ContentSection(Base):
+    __tablename__ = "content_sections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(100), nullable=False, unique=True, index=True)
+    title = Column(String(255), nullable=True)
+    subtitle = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
+    image_url = Column(String(500), nullable=True)
+    primary_cta_label = Column(String(100), nullable=True)
+    primary_cta_href = Column(String(255), nullable=True)
+    secondary_cta_label = Column(String(100), nullable=True)
+    secondary_cta_href = Column(String(255), nullable=True)
+    metadata_json = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class ContentItem(Base):
+    __tablename__ = "content_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String(100), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    subtitle = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
+    image_url = Column(String(500), nullable=True)
+    cta_label = Column(String(100), nullable=True)
+    cta_href = Column(String(255), nullable=True)
+    tag = Column(String(100), nullable=True)
+    metadata_json = Column(Text, nullable=True)
+    display_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

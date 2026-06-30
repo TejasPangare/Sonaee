@@ -61,24 +61,30 @@ export default function MenuPage() {
   return (
     <div className="py-8 md:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <AnimatedSection animation="fade-up" className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Our Menu</h1>
-          <p className="text-muted-foreground">
-            Fresh ingredients, expertly prepared. Ready for pickup in 20-30 minutes.
-          </p>
+        <AnimatedSection animation="fade-up" className="mb-8 overflow-hidden rounded-[2rem] border border-border/70 bg-card/85 p-6 premium-panel md:p-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">Restaurant Ordering</p>
+              <h1 className="mb-3 text-4xl text-foreground md:text-5xl">Our Menu</h1>
+              <p className="text-muted-foreground">
+                Fresh ingredients, signature flavors, and a smooth ordering experience designed for quick pickup.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-primary/15 bg-primary/8 px-5 py-4 text-sm text-foreground">
+              Average prep time: 20-30 minutes
+            </div>
+          </div>
         </AnimatedSection>
 
-        {/* Search & Filters */}
-        <AnimatedSection animation="fade-up" delay={100} className="space-y-4 mb-8">
+        <AnimatedSection animation="fade-up" delay={100} className="mb-8 space-y-4">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search dishes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="h-12 rounded-full border-border/70 bg-card/90 pl-10"
             />
           </div>
           <CategoryTabs
@@ -88,9 +94,8 @@ export default function MenuPage() {
           />
         </AnimatedSection>
 
-        {/* Results */}
         {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item, i) => (
               <AnimatedSection key={item.id} animation="fade-up" delay={Math.min(i * 50, 300)}>
                 <MenuItemCard item={item} />
@@ -98,10 +103,10 @@ export default function MenuPage() {
             ))}
           </div>
         ) : (
-          <AnimatedSection animation="fade-in" className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No items found</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Try adjusting your search or filter
+          <AnimatedSection animation="fade-in" className="py-16 text-center">
+            <p className="text-lg text-muted-foreground">{isLoading ? "Loading menu..." : "No items found"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isLoading ? "Please wait a moment" : "Try adjusting your search or filter"}
             </p>
           </AnimatedSection>
         )}

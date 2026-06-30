@@ -256,6 +256,58 @@ class ApiClient {
   async getDashboardStats(token: string) {
     return this.request<DashboardStats>('/api/admin/dashboard', { token });
   }
+
+  async getSiteContent() {
+    return this.request<SiteContentResponse>('/api/content/site');
+  }
+
+  async getContentSections(token: string) {
+    return this.request<ContentSection[]>('/api/admin/content/sections', { token });
+  }
+
+  async upsertContentSection(key: string, data: ContentSectionUpsert, token: string) {
+    return this.request<ContentSection>(`/api/admin/content/sections/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      token,
+    });
+  }
+
+  async getContentItems(token: string, type?: string) {
+    const query = type ? `?type=${encodeURIComponent(type)}` : '';
+    return this.request<ContentItem[]>(`/api/admin/content/items${query}`, { token });
+  }
+
+  async createContentItem(data: ContentItemCreate, token: string) {
+    return this.request<ContentItem>('/api/admin/content/items', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      token,
+    });
+  }
+
+  async updateContentItem(id: number, data: ContentItemUpdate, token: string) {
+    return this.request<ContentItem>(`/api/admin/content/items/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      token,
+    });
+  }
+
+  async deleteContentItem(id: number, token: string) {
+    return this.request<{ success: boolean }>(`/api/admin/content/items/${id}`, {
+      method: 'DELETE',
+      token,
+    });
+  }
+
+  async registerAdmin(data: AdminCreateRequest, token: string) {
+    return this.request<Admin>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      token,
+    });
+  }
 }
 
 // Types matching the FastAPI schemas
@@ -449,6 +501,95 @@ export interface DashboardStats {
   completed_orders_today: number;
   available_tables: number;
   occupied_tables: number;
+}
+
+export interface ContentSection {
+  id: number;
+  key: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  primary_cta_label?: string;
+  primary_cta_href?: string;
+  secondary_cta_label?: string;
+  secondary_cta_href?: string;
+  metadata_json?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ContentSectionUpsert {
+  key: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  primary_cta_label?: string;
+  primary_cta_href?: string;
+  secondary_cta_label?: string;
+  secondary_cta_href?: string;
+  metadata_json?: string;
+  is_active?: boolean;
+}
+
+export interface ContentItem {
+  id: number;
+  type: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  cta_label?: string;
+  cta_href?: string;
+  tag?: string;
+  metadata_json?: string;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ContentItemCreate {
+  type: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  cta_label?: string;
+  cta_href?: string;
+  tag?: string;
+  metadata_json?: string;
+  display_order?: number;
+  is_active?: boolean;
+}
+
+export interface ContentItemUpdate {
+  type?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  cta_label?: string;
+  cta_href?: string;
+  tag?: string;
+  metadata_json?: string;
+  display_order?: number;
+  is_active?: boolean;
+}
+
+export interface SiteContentResponse {
+  sections: ContentSection[];
+  items: ContentItem[];
+}
+
+export interface AdminCreateRequest {
+  email: string;
+  full_name: string;
+  password: string;
+  is_active?: boolean;
+  is_superadmin?: boolean;
 }
 
 export interface CartItem {

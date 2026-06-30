@@ -331,6 +331,72 @@ def create_admin(db: Session, admin: schemas.AdminCreate):
     return db_admin
 
 
+def get_content_sections(db: Session):
+    return db.query(models.ContentSection).order_by(models.ContentSection.key).all()
+
+
+def get_content_section_by_key(db: Session, key: str):
+    return db.query(models.ContentSection).filter(models.ContentSection.key == key).first()
+
+
+def upsert_content_section(db: Session, key: str, section: schemas.ContentSectionUpsert):
+    db_section = get_content_section_by_key(db, key)
+    data = section.model_dump()
+    data["key"] = key
+
+    if db_section:
+      for field, value in data.items():
+          setattr(db_section, field, value)
+    else:
+      db_section = models.ContentSection(**data)
+      db.add(db_section)
+
+    db.commit()
+    db.refresh(db_section)
+    return db_section
+
+
+def get_content_items(db: Session, item_type: Optional[str] = None, active_only: bool = False):
+    query = db.query(models.ContentItem)
+    if item_type:
+        query = query.filter(models.ContentItem.type == item_type)
+    if active_only:
+        query = query.filter(models.ContentItem.is_active == True)
+    return query.order_by(models.ContentItem.type, models.ContentItem.display_order, models.ContentItem.id).all()
+
+
+def get_content_item(db: Session, item_id: int):
+    return db.query(models.ContentItem).filter(models.ContentItem.id == item_id).first()
+
+
+def create_content_item(db: Session, item: schemas.ContentItemCreate):
+    db_item = models.ContentItem(**item.model_dump())
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def update_content_item(db: Session, item_id: int, item: schemas.ContentItemUpdate):
+    db_item = get_content_item(db, item_id)
+    if db_item:
+        update_data = item.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_item, key, value)
+        db.commit()
+        db.refresh(db_item)
+    return db_item
+
+
+def delete_content_item(db: Session, item_id: int):
+    db_item = get_content_item(db, item_id)
+    if db_item:
+        db.delete(db_item)
+        db.commit()
+        return True
+    return False
+
+
 # Dashboard Stats
 def get_dashboard_stats(db: Session) -> schemas.DashboardStats:
     today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

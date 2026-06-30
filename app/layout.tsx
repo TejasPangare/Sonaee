@@ -1,12 +1,22 @@
 import React from "react"
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Cormorant_Garamond, Geist_Mono, Manrope } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import '@/app/globals.css'
 import FirebaseMessagingClient from "@/components/FirebaseMessagingClient"
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const headingFont = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  weight: ["500", "600", "700"],
+})
+
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+})
+
+const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: 'Hotel Sonaee Veg Restaurant | Fine Dining & Takeaway',
@@ -36,12 +46,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-
-
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
-         <FirebaseMessagingClient />
+      <body className={`${bodyFont.variable} ${headingFont.variable} font-sans antialiased`}>
+        <FirebaseMessagingClient />
         {children}
         <Analytics />
       </body>

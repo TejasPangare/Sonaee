@@ -7,6 +7,7 @@ import {
   ClipboardList, 
   Utensils, 
   Grid3X3,
+  FileText,
   LogOut,
   ChevronLeft,
   Menu
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/admin/orders', label: 'Orders', icon: ClipboardList },
   { href: '/admin/menu', label: 'Menu Items', icon: Utensils },
   { href: '/admin/tables', label: 'Tables', icon: Grid3X3 },
+  { href: '/admin/content', label: 'Site Content', icon: FileText },
 ]
 
 export function AdminSidebar() {

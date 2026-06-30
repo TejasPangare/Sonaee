@@ -35,7 +35,7 @@ class Settings:
         self.app_name = os.getenv("APP_NAME") or "Hotel Restaurant API"
         self.api_v1_prefix = os.getenv("API_V1_PREFIX") or "/api"
         self.database_url = os.getenv("DATABASE_URL") or (
-            "postgresql://user:password@localhost:5432/hotel_restaurant"
+            "postgresql://postgres:@localhost:5432/hotel_restaurant"
         )
         self.db_echo = _get_bool("DB_ECHO", False)
         self.secret_key = os.getenv("SECRET_KEY") or None

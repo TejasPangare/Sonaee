@@ -278,3 +278,76 @@ class DashboardStats(BaseModel):
     completed_orders_today: int
     available_tables: int
     occupied_tables: int
+
+
+class ContentSectionBase(BaseModel):
+    key: str
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    primary_cta_label: Optional[str] = None
+    primary_cta_href: Optional[str] = None
+    secondary_cta_label: Optional[str] = None
+    secondary_cta_href: Optional[str] = None
+    metadata_json: Optional[str] = None
+    is_active: bool = True
+
+
+class ContentSectionUpsert(ContentSectionBase):
+    pass
+
+
+class ContentSection(ContentSectionBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ContentItemBase(BaseModel):
+    type: str
+    title: str
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    cta_label: Optional[str] = None
+    cta_href: Optional[str] = None
+    tag: Optional[str] = None
+    metadata_json: Optional[str] = None
+    display_order: int = 0
+    is_active: bool = True
+
+
+class ContentItemCreate(ContentItemBase):
+    pass
+
+
+class ContentItemUpdate(BaseModel):
+    type: Optional[str] = None
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    cta_label: Optional[str] = None
+    cta_href: Optional[str] = None
+    tag: Optional[str] = None
+    metadata_json: Optional[str] = None
+    display_order: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class ContentItem(ContentItemBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SiteContentResponse(BaseModel):
+    sections: List[ContentSection]
+    items: List[ContentItem]

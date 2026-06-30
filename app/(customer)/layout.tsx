@@ -3,8 +3,10 @@
 import React, { useEffect } from "react"
 import { usePathname, useRouter } from 'next/navigation'
 import { CartProvider } from '@/lib/cart-context'
+import { SiteSettingsProvider } from '@/lib/site-settings-context'
 import { Header } from '@/components/customer/header'
 import { Footer } from '@/components/customer/footer'
+import { FloatingActions } from '@/components/customer/floating-actions'
 
 const protectedRoutes = ['/cart', '/checkout', '/order-confirmation', '/orders']
 
@@ -28,11 +30,14 @@ export default function CustomerLayout({
 
   return (
     <CartProvider>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </div>
+      <SiteSettingsProvider>
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <FloatingActions />
+        </div>
+      </SiteSettingsProvider>
     </CartProvider>
   )
 }

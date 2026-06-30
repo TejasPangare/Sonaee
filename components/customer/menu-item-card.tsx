@@ -16,8 +16,8 @@ interface MenuItemCardProps {
 export function MenuItemCard({ item }: MenuItemCardProps) {
   const { items, addItem, updateQuantity } = useCart()
   const [imageError, setImageError] = useState(false)
-  
-  const cartItem = items.find(ci => Number(ci.menu_item.id) === item.id)
+
+  const cartItem = items.find((ci) => Number(ci.menu_item.id) === item.id)
   const quantity = cartItem?.quantity || 0
 
   const handleAdd = () => {
@@ -33,74 +33,75 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden group hover:shadow-lg transition-shadow duration-300">
-      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+    <Card className="premium-panel group overflow-hidden border-border/70 bg-card/90 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {!imageError ? (
           <Image
             src={item.image_url || "/placeholder.svg"}
             alt={item.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted">
-            <span className="text-4xl text-muted-foreground/30">🍽️</span>
+          <div className="flex h-full w-full items-center justify-center bg-muted">
+            <span className="text-2xl text-muted-foreground/40">Image unavailable</span>
           </div>
         )}
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent" />
         {!item.is_available && (
-          <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
             <Badge variant="secondary" className="text-sm">Currently Unavailable</Badge>
           </div>
         )}
       </div>
       <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-semibold text-foreground line-clamp-1">{item.name}</h3>
-          <span className="font-bold text-primary shrink-0">₹{item.price.toFixed(2)}</span>
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <h3 className="line-clamp-1 text-xl text-foreground">{item.name}</h3>
+          <span className="shrink-0 text-lg font-bold text-primary">Rs. {item.price.toFixed(2)}</span>
         </div>
-        
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+
+        <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
           {item.description}
         </p>
-        
-        <div className="flex items-center gap-2 mb-4">
+
+        <div className="mb-4 flex items-center gap-2">
           {item.is_vegetarian && (
-            <Badge variant="secondary" className="text-xs gap-1 bg-green-100 text-green-800 border-green-200">
+            <Badge variant="secondary" className="gap-1 border-emerald-200 bg-emerald-50 text-xs text-emerald-800">
               <Leaf className="w-3 h-3" />
               Veg
             </Badge>
           )}
           {item.spice_level > 0 && (
-            <Badge variant="secondary" className="text-xs gap-1 bg-red-100 text-red-800 border-red-200">
+            <Badge variant="secondary" className="gap-1 border-orange-200 bg-orange-50 text-xs text-orange-800">
               <Flame className="w-3 h-3" />
               {item.spice_level === 1 ? 'Mild' : item.spice_level === 2 ? 'Medium' : 'Hot'}
             </Badge>
           )}
           {item.is_gluten_free && (
-            <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200">
+            <Badge variant="secondary" className="border-amber-200 bg-amber-50 text-xs text-amber-800">
               GF
             </Badge>
           )}
-          <span className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
+          <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" />
             {item.prep_time_minutes}m
           </span>
         </div>
-        
+
         {item.is_available && (
           <div className="flex items-center gap-2">
             {quantity === 0 ? (
-              <Button onClick={handleAdd} className="w-full" size="sm">
-                <Plus className="w-4 h-4 mr-1" />
+              <Button onClick={handleAdd} className="w-full rounded-full" size="sm">
+                <Plus className="mr-1 w-4 h-4" />
                 Add to Order
               </Button>
             ) : (
-              <div className="flex items-center justify-between w-full">
+              <div className="flex w-full items-center justify-between">
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 bg-transparent"
+                  className="h-8 w-8 rounded-full border-border/70 bg-transparent"
                   onClick={handleDecrement}
                 >
                   <Minus className="w-4 h-4" />
@@ -109,7 +110,7 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 bg-transparent"
+                  className="h-8 w-8 rounded-full border-border/70 bg-transparent"
                   onClick={handleIncrement}
                 >
                   <Plus className="w-4 h-4" />

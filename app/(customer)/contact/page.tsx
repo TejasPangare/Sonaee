@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useSiteSettings } from '@/lib/site-settings-context'
 import { Textarea } from '@/components/ui/textarea'
 
 export default function ContactPage() {
+  const { settings } = useSiteSettings()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
@@ -45,8 +47,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Address</h3>
                     <p className="text-muted-foreground">
-                      123 Grand Avenue<br />
-                      Downtown, NY 10001
+                      {settings.address}
                     </p>
                   </div>
                 </div>
@@ -61,8 +62,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Phone</h3>
-                    <a href="tel:+15551234567" className="text-muted-foreground hover:text-primary transition-colors">
-                      (555) 123-4567
+                    <a href={settings.phoneHref} className="text-muted-foreground hover:text-primary transition-colors">
+                      {settings.phoneDisplay}
                     </a>
                   </div>
                 </div>
@@ -77,8 +78,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                    <a href="mailto:info@grandhotel.com" className="text-muted-foreground hover:text-primary transition-colors">
-                      info@grandhotel.com
+                    <a href={settings.emailHref} className="text-muted-foreground hover:text-primary transition-colors">
+                      {settings.email}
                     </a>
                   </div>
                 </div>
@@ -94,9 +95,8 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Opening Hours</h3>
                     <div className="text-muted-foreground space-y-1">
-                      <p>Monday - Thursday: 11 AM - 10 PM</p>
-                      <p>Friday - Saturday: 11 AM - 11 PM</p>
-                      <p>Sunday: 11 AM - 9 PM</p>
+                      <p>{settings.businessHours}</p>
+                      <p>Takeaway: {settings.takeawayHours}</p>
                     </div>
                   </div>
                 </div>

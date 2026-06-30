@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import engine, Base
-from .routers import categories, menu_items, tables, orders, auth, admin, customers
+from .routers import categories, menu_items, tables, orders, auth, admin, customers, content
 from .config import settings
 
 if settings.auto_create_tables:
@@ -32,6 +32,7 @@ app.include_router(menu_items.router, prefix=settings.api_v1_prefix)
 app.include_router(tables.router, prefix=settings.api_v1_prefix)
 app.include_router(orders.router, prefix=settings.api_v1_prefix)
 app.include_router(customers.router, prefix=settings.api_v1_prefix)
+app.include_router(content.router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/")
