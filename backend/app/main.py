@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .routers import categories, menu_items, tables, orders, auth, admin, customers, content
 from .config import settings
+from . import firebase_init
 
 if settings.auto_create_tables:
     Base.metadata.create_all(bind=engine)

@@ -2,12 +2,12 @@ importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
 importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js");
 
 firebase.initializeApp({
-  apiKey: "AIzaSyCE8C2etJrBoTq6vHntqAQhHIXW6lEo0DE",
-  authDomain: "sonaee-veg.firebaseapp.com",
-  projectId: "sonaee-veg",
-  storageBucket: "sonaee-veg.firebasestorage.app",
-  messagingSenderId: "139778729097",
-  appId: "1:139778729097:web:658dd8223c9ef4e32a9258"
+  apiKey: "AIzaSyCieT-BPG7crePUtFkGX7Ts55NzXPPBCRM",
+  authDomain: "sonaee.firebaseapp.com",
+  projectId: "sonaee",
+  storageBucket: "sonaee.firebasestorage.app",
+  messagingSenderId: "193660205460",
+  appId: "1:193660205460:web:909fc20898b5d7b5acf781"
 });
 
 const messaging = firebase.messaging();
