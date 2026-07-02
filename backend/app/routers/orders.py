@@ -6,7 +6,7 @@ from datetime import datetime
 from ..database import get_db
 from .. import crud, schemas, models
 from ..auth import get_current_admin, get_current_customer_identity
-from ..push import send_push
+from ..push import send_push, send_push_to_admins
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -42,7 +42,16 @@ def create_order(
 ):
     """Create a new order for the authenticated customer."""
     try:
-        return crud.create_order(db, order, customer_id=int(customer_identity["customer_id"]))
+        new_order = crud.create_order(db, order, customer_id=int(customer_identity["customer_id"]))
+        
+        # Notify all active admins about the new order
+        send_push_to_admins(
+            title="New Order",
+            body=f"A new order #{new_order.order_number} has been placed.",
+            db=db
+        )
+        
+        return new_order
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -109,6 +118,14 @@ def cancel_order(
 
     db.commit()
     db.refresh(order)
+    
+    # Notify all active admins about the cancellation
+    send_push_to_admins(
+        title="Order Cancelled",
+        body=f"Order #{order.order_number} has been cancelled.",
+        db=db
+    )
+    
     return crud.get_order(db, order_id)
 
 

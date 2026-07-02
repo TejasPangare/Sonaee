@@ -316,6 +316,24 @@ def get_admin_by_email(db: Session, email: str):
     return db.query(models.Admin).filter(models.Admin.email == email).first()
 
 
+def get_active_admins_with_fcm_token(db: Session):
+    """Get all active admins who have registered FCM tokens for push notifications"""
+    return db.query(models.Admin).filter(
+        models.Admin.is_active == True,
+        models.Admin.fcm_token.isnot(None)
+    ).all()
+
+
+def update_admin_fcm_token(db: Session, admin_id: int, fcm_token: str):
+    """Update admin's FCM token for push notifications"""
+    admin = db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+    if admin:
+        admin.fcm_token = fcm_token
+        db.commit()
+        db.refresh(admin)
+    return admin
+
+
 def create_admin(db: Session, admin: schemas.AdminCreate):
     hashed_password = get_password_hash(admin.password)
     db_admin = models.Admin(
