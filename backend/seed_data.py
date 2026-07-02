@@ -277,7 +277,7 @@ try:
 
         # Create default admin
         admin = Admin(
-            email="admin2@sonaee.com",
+            email="adm@sonaee.com",
             full_name="Admin User",
             hashed_password=get_password_hash("admin7171"),
             is_superadmin=True
