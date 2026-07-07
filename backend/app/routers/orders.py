@@ -6,7 +6,7 @@ from datetime import datetime
 from ..database import get_db
 from .. import crud, schemas, models
 from ..auth import get_current_admin, get_current_customer_identity
-from ..push import send_push, send_push_to_admins
+from ..notifications.push_service import send_push, send_push_to_admins
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
