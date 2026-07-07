@@ -13,6 +13,8 @@ export type SiteSettings = {
   whatsappHref: string
   email: string
   emailHref: string
+  contactInquiryRecipient: string
+  banquetInquiryRecipient: string
   address: string
   mapEmbedUrl: string
   mapLink: string
@@ -33,6 +35,8 @@ type SiteSettingsMetadata = Partial<{
   phoneNumber: string
   whatsappNumber: string
   email: string
+  contactInquiryRecipient: string
+  banquetInquiryRecipient: string
   address: string
   mapEmbedUrl: string
   mapLink: string
@@ -58,6 +62,8 @@ export const defaultSiteSettings: SiteSettings = {
   whatsappHref: 'https://wa.me/15551234567',
   email: 'info@sonaeeveg.com',
   emailHref: 'mailto:info@sonaeeveg.com',
+  contactInquiryRecipient: 'tejaspangare1004@gmail.com',
+  banquetInquiryRecipient: 'tejaspangare1004@gmail.com',
   address: '123 Grand Avenue, Downtown, NY 10001',
   mapEmbedUrl: 'https://www.google.com/maps?q=123%20Grand%20Avenue%20Downtown%20NY%2010001&z=14&output=embed',
   mapLink: 'https://maps.google.com/?q=123%20Grand%20Avenue%20Downtown%20NY%2010001',
@@ -105,6 +111,8 @@ export function getSiteSettingsFromSection(section?: ContentSection | null): Sit
   const phoneNumber = metadata.phoneNumber || defaultSiteSettings.phoneNumber
   const whatsappNumber = metadata.whatsappNumber || defaultSiteSettings.whatsappNumber
   const email = metadata.email || defaultSiteSettings.email
+  const contactInquiryRecipient = metadata.contactInquiryRecipient || defaultSiteSettings.contactInquiryRecipient
+  const banquetInquiryRecipient = metadata.banquetInquiryRecipient || defaultSiteSettings.banquetInquiryRecipient
 
   return {
     hotelName,
@@ -119,6 +127,8 @@ export function getSiteSettingsFromSection(section?: ContentSection | null): Sit
     whatsappHref: buildWhatsAppHref(whatsappNumber),
     email,
     emailHref: buildMailHref(email),
+    contactInquiryRecipient,
+    banquetInquiryRecipient,
     address: metadata.address || defaultSiteSettings.address,
     mapEmbedUrl: metadata.mapEmbedUrl || defaultSiteSettings.mapEmbedUrl,
     mapLink: metadata.mapLink || defaultSiteSettings.mapLink,
@@ -141,6 +151,8 @@ export function getSiteSettingsMetadata(settings: SiteSettings) {
     phoneNumber: settings.phoneNumber,
     whatsappNumber: settings.whatsappNumber,
     email: settings.email,
+    contactInquiryRecipient: settings.contactInquiryRecipient,
+    banquetInquiryRecipient: settings.banquetInquiryRecipient,
     address: settings.address,
     mapEmbedUrl: settings.mapEmbedUrl,
     mapLink: settings.mapLink,

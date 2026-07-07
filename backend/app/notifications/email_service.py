@@ -1,12 +1,19 @@
 import logging
+import json
 
+from .. import crud
+from ..database import SessionLocal
 from .email_client import get_email_sender, get_resend_module
 from .email_templates import (
+    render_banquet_inquiry_email,
+    render_contact_inquiry_email,
     render_feedback_request_email,
     render_order_confirmation_email,
 )
 
 logger = logging.getLogger(__name__)
+INQUIRY_RECIPIENT = "tejaspangare1004@gmail.com"
+SITE_SETTINGS_KEY = "site_settings"
 
 
 def _get_customer_email(order) -> str | None:
@@ -41,6 +48,27 @@ def _send_email(*, to_email: str, subject: str, html: str) -> bool:
         return False
 
 
+def _get_inquiry_recipient(metadata_key: str) -> str:
+    db = SessionLocal()
+    try:
+        section = crud.get_content_section_by_key(db, SITE_SETTINGS_KEY)
+        metadata = {}
+        if section and getattr(section, "metadata_json", None):
+            try:
+                metadata = json.loads(section.metadata_json)
+            except json.JSONDecodeError:
+                metadata = {}
+
+        recipient = metadata.get(metadata_key)
+        if isinstance(recipient, str) and recipient.strip():
+            return recipient.strip()
+        return INQUIRY_RECIPIENT
+    except Exception:
+        return INQUIRY_RECIPIENT
+    finally:
+        db.close()
+
+
 def send_order_confirmation(order) -> bool:
     try:
         customer_email = _get_customer_email(order)
@@ -70,4 +98,31 @@ def send_feedback_request(order) -> bool:
         )
     except Exception as error:  # pragma: no cover - defensive guard
         logger.warning("Feedback request email failed: %s", error)
+        return False
+
+
+def send_contact_inquiry(inquiry) -> bool:
+    try:
+        recipient = _get_inquiry_recipient("contactInquiryRecipient")
+        return _send_email(
+            to_email=recipient,
+            subject=f"Contact Inquiry: {getattr(inquiry, 'subject', 'New message')}",
+            html=render_contact_inquiry_email(inquiry),
+        )
+    except Exception as error:  # pragma: no cover - defensive guard
+        logger.warning("Contact inquiry email failed: %s", error)
+        return False
+
+
+def send_banquet_inquiry(inquiry) -> bool:
+    try:
+        event_type = getattr(inquiry, "event_type", "Banquet Inquiry")
+        recipient = _get_inquiry_recipient("banquetInquiryRecipient")
+        return _send_email(
+            to_email=recipient,
+            subject=f"Banquet Inquiry: {event_type}",
+            html=render_banquet_inquiry_email(inquiry),
+        )
+    except Exception as error:  # pragma: no cover - defensive guard
+        logger.warning("Banquet inquiry email failed: %s", error)
         return False

@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 
 
@@ -268,6 +268,31 @@ class CustomerLoginRequest(BaseModel):
 
 class CustomerRegisterRequest(CustomerLoginRequest):
     full_name: str
+
+
+class InquiryResponse(BaseModel):
+    success: bool = True
+    message: str
+
+
+class ContactInquiryRequest(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    subject: str
+    message: str
+
+
+class BanquetInquiryRequest(BaseModel):
+    name: str
+    phone: str
+    email: EmailStr
+    event_type: str
+    event_date: date
+    expected_guests: int = Field(gt=0)
+    budget: Optional[str] = None
+    additional_requirements: str
 
 
 # Dashboard Stats

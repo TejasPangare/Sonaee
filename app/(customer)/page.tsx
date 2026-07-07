@@ -26,9 +26,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { useSiteSettings } from "@/lib/site-settings-context";
 import { GallerySection } from "@/components/customer/gallery-section";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { ContactUsForm } from "@/components/customer/contact-us-form";
 import { homepageGalleryItems } from "@/lib/gallery-data";
 import { apiClient, Category, MenuItemWithCategory } from "@/lib/api-client";
 import { useEffect, useState } from "react";
@@ -688,73 +686,15 @@ export default function HomePage() {
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <AnimatedSection animation="fade-right">
               <div className="premium-panel rounded-[2rem] border border-border/60 bg-card/88 p-8 md:p-10">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">Quick Enquiry</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">Contact Us</p>
                 <h2 className="mb-4 text-4xl text-foreground md:text-5xl">
-                  Tell us about your event in a few quick details.
+                  Have a question? Send us a quick message.
                 </h2>
                 <p className="mb-8 max-w-2xl text-muted-foreground">
-                  Share your preferred event type, guest count, and date. For instant coordination, continue on WhatsApp with our banquet team.
+                  For general customer inquiries, reservations, or dining questions, send us a message and our team will get back to you.
                 </p>
 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="enquiry-name">Name</Label>
-                      <Input id="enquiry-name" placeholder="Your full name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="enquiry-phone">Phone</Label>
-                      <Input id="enquiry-phone" type="tel" placeholder="+1 (555) 123-4567" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="enquiry-event-type">Event Type</Label>
-                      <select
-                        id="enquiry-event-type"
-                        className="surface-field h-12 w-full rounded-2xl px-4 text-sm text-foreground outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Select an event</option>
-                        <option>Wedding</option>
-                        <option>Reception</option>
-                        <option>Engagement</option>
-                        <option>Birthday</option>
-                        <option>Baby Shower</option>
-                        <option>Corporate Event</option>
-                        <option>Anniversary</option>
-                        <option>Naming Ceremony</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="enquiry-guests">Guests</Label>
-                      <Input id="enquiry-guests" type="number" min="1" placeholder="Approximate guest count" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="enquiry-date">Preferred Date</Label>
-                      <Input id="enquiry-date" type="date" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="enquiry-message">Message</Label>
-                      <Textarea id="enquiry-message" className="min-h-[132px] sm:min-h-[48px]" placeholder="Tell us about your event style, menu, or seating needs..." />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Link href="/contact#banquet">
-                      <Button className="w-full sm:w-auto">Send Enquiry</Button>
-                    </Link>
-                    <a href={settings.whatsappHref} target="_blank" rel="noreferrer">
-                      <Button variant="outline" className="w-full sm:w-auto">
-                        WhatsApp Us
-                      </Button>
-                    </a>
-                  </div>
-                </form>
+                <ContactUsForm />
               </div>
             </AnimatedSection>
 

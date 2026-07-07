@@ -1,4 +1,5 @@
 from html import escape
+from typing import Any
 
 
 def _format_currency(amount) -> str:
@@ -67,6 +68,26 @@ def _wrap_email(title: str, body_html: str) -> str:
     """
 
 
+def _render_inquiry_rows(fields: list[tuple[str, Any]]) -> str:
+    rows = []
+    for label, value in fields:
+        if value in (None, ""):
+            display_value = "N/A"
+        else:
+            display_value = escape(str(value))
+
+        rows.append(
+            f"""
+            <tr>
+              <td style="padding: 12px 0; border-bottom: 1px solid #f0e4d7; width: 180px; color: #8b7463; vertical-align: top;">{escape(label)}</td>
+              <td style="padding: 12px 0; border-bottom: 1px solid #f0e4d7; color: #2f241f;">{display_value}</td>
+            </tr>
+            """
+        )
+
+    return "".join(rows)
+
+
 def render_order_confirmation_email(order) -> str:
     customer_name = escape(getattr(getattr(order, "customer", None), "full_name", "Customer"))
     order_number = escape(getattr(order, "order_number", ""))
@@ -123,3 +144,53 @@ def render_feedback_request_email(order) -> str:
     </p>
     """
     return _wrap_email("Share Your Sonaee Veg Feedback", body_html)
+
+
+def render_contact_inquiry_email(inquiry) -> str:
+    first_name = escape(getattr(inquiry, "first_name", ""))
+    last_name = escape(getattr(inquiry, "last_name", ""))
+    full_name = f"{first_name} {last_name}".strip() or "Customer"
+    fields = [
+        ("Name", full_name),
+        ("Email", getattr(inquiry, "email", "")),
+        ("Phone", getattr(inquiry, "phone", "")),
+        ("Subject", getattr(inquiry, "subject", "")),
+        ("Message", getattr(inquiry, "message", "")),
+    ]
+
+    body_html = f"""
+    <h1 style="margin: 0 0 12px; font-size: 28px; color: #2f241f;">Contact Inquiry</h1>
+    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #5e4b3e;">
+      A customer has submitted a general enquiry from the website.
+    </p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+      {_render_inquiry_rows(fields)}
+    </table>
+    """
+    return _wrap_email("Sonaee Veg Contact Inquiry", body_html)
+
+
+def render_banquet_inquiry_email(inquiry) -> str:
+    event_date = getattr(inquiry, "event_date", None)
+    formatted_date = event_date.strftime("%B %d, %Y") if event_date else "N/A"
+    fields = [
+        ("Name", getattr(inquiry, "name", "")),
+        ("Phone", getattr(inquiry, "phone", "")),
+        ("Email", getattr(inquiry, "email", "")),
+        ("Event Type", getattr(inquiry, "event_type", "")),
+        ("Event Date", formatted_date),
+        ("Expected Guests", getattr(inquiry, "expected_guests", "")),
+        ("Budget", getattr(inquiry, "budget", "")),
+        ("Additional Requirements", getattr(inquiry, "additional_requirements", "")),
+    ]
+
+    body_html = f"""
+    <h1 style="margin: 0 0 12px; font-size: 28px; color: #2f241f;">Banquet Inquiry</h1>
+    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #5e4b3e;">
+      A customer has submitted a banquet enquiry from the website.
+    </p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+      {_render_inquiry_rows(fields)}
+    </table>
+    """
+    return _wrap_email("Sonaee Veg Banquet Inquiry", body_html)

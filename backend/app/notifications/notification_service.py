@@ -1,4 +1,9 @@
-from .email_service import send_feedback_request, send_order_confirmation
+from .email_service import (
+    send_banquet_inquiry,
+    send_contact_inquiry,
+    send_feedback_request,
+    send_order_confirmation,
+)
 from .push_service import send_push, send_push_to_admins
 
 
@@ -43,7 +48,7 @@ def notify_customer_feedback_request(order):
 
 
 def notify_contact_inquiry(inquiry):
-    return None
+    return send_contact_inquiry(inquiry)
 
 
 def notify_table_reservation(reservation):
@@ -51,4 +56,4 @@ def notify_table_reservation(reservation):
 
 
 def notify_banquet_inquiry(inquiry):
-    return None
+    return send_banquet_inquiry(inquiry)

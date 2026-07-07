@@ -236,6 +236,20 @@ class ApiClient {
     });
   }
 
+  async submitContactInquiry(data: ContactInquiryRequest) {
+    return this.request<InquiryResponse>('/api/inquiries/contact', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async submitBanquetInquiry(data: BanquetInquiryRequest) {
+    return this.request<InquiryResponse>('/api/inquiries/banquet', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Customer-specific order endpoints
   async getMyOrders(token: string) {
     return this.request<OrderWithItems[]>('/api/orders/my', { token });
@@ -492,6 +506,31 @@ export interface CustomerRegisterRequest {
   full_name: string;
   email: string;
   phone: string;
+}
+
+export interface ContactInquiryRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}
+
+export interface BanquetInquiryRequest {
+  name: string;
+  phone: string;
+  email: string;
+  event_type: string;
+  event_date: string;
+  expected_guests: number;
+  budget?: string;
+  additional_requirements: string;
+}
+
+export interface InquiryResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface DashboardStats {

@@ -196,10 +196,50 @@ export function Header() {
                             ? "bg-primary text-primary-foreground"
                             : "text-foreground hover:bg-secondary hover:text-primary"
                         )}
-                      >
-                        {link.label}
+                        >
+                          {link.label}
                       </Link>
                     ))}
+                  </div>
+
+                  <div className="border-t border-border/70 px-4 py-4">
+                    <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
+                        Account
+                      </p>
+                      {isLoggedIn ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button asChild variant="outline" className="w-full">
+                            <Link href="/orders" onClick={() => setIsOpen(false)}>
+                              Check Orders
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full"
+                            onClick={() => {
+                              setIsOpen(false)
+                              handleLogout()
+                            }}
+                          >
+                            Logout
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button asChild variant="outline" className="w-full">
+                            <Link href="/login" onClick={() => setIsOpen(false)}>
+                              Login
+                            </Link>
+                          </Button>
+                          <Button asChild className="w-full">
+                            <Link href="/register" onClick={() => setIsOpen(false)}>
+                              Register
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="border-t border-border/70 px-6 py-5">

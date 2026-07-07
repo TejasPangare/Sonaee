@@ -1,37 +1,21 @@
 'use client'
 
-import React from "react"
-
-import { useState } from 'react'
-import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { useSiteSettings } from '@/lib/site-settings-context'
-import { Textarea } from '@/components/ui/textarea'
+import { BanquetInquiryForm } from '@/components/customer/banquet-inquiry-form'
 
 export default function ContactPage() {
   const { settings } = useSiteSettings()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setIsSubmitting(false)
-    setSubmitted(true)
-  }
 
   return (
     <div className="py-8 md:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Contact Us</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Banquet Inquiry</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Have a question or want to make a reservation? We would love to hear from you.
+            Planning a celebration? Share your banquet details and our team will help with the next steps.
           </p>
         </div>
 
@@ -105,59 +89,15 @@ export default function ContactPage() {
           </div>
 
           {/* Contact Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Send us a Message</CardTitle>
-            </CardHeader>
+          <Card id="banquet">
+            <div className="border-b border-border/60 px-6 py-5">
+              <h2 className="text-xl font-semibold text-foreground">Banquet Inquiry</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Share your event details and we will help with planning, seating, and menu coordination.
+              </p>
+            </div>
             <CardContent>
-              {submitted ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                    <Send className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Message Sent!</h3>
-                  <p className="text-muted-foreground">
-                    Thank you for reaching out. We will get back to you within 24 hours.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name *</Label>
-                      <Input id="firstName" placeholder="John" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name *</Label>
-                      <Input id="lastName" placeholder="Smith" required />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" type="tel" placeholder="(555) 123-4567" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subject *</Label>
-                    <Input id="subject" placeholder="Reservation inquiry" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message *</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Tell us how we can help..."
-                      className="min-h-[120px]"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Sending...' : 'Send Message'}
-                  </Button>
-                </form>
-              )}
+              <BanquetInquiryForm />
             </CardContent>
           </Card>
         </div>

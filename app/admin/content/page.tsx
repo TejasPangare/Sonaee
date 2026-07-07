@@ -170,6 +170,22 @@ export default function AdminContentPage() {
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" value={settings.email} onChange={(e) => updateSetting('email', e.target.value)} />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactInquiryRecipient">Contact Inquiry Recipient</Label>
+                    <Input
+                      id="contactInquiryRecipient"
+                      value={settings.contactInquiryRecipient}
+                      onChange={(e) => updateSetting('contactInquiryRecipient', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="banquetInquiryRecipient">Banquet Inquiry Recipient</Label>
+                    <Input
+                      id="banquetInquiryRecipient"
+                      value={settings.banquetInquiryRecipient}
+                      onChange={(e) => updateSetting('banquetInquiryRecipient', e.target.value)}
+                    />
+                  </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="address">Address</Label>
                     <Textarea id="address" value={settings.address} onChange={(e) => updateSetting('address', e.target.value)} className="min-h-24" />
