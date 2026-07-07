@@ -6,7 +6,13 @@ from datetime import datetime
 from ..database import get_db
 from .. import crud, schemas, models
 from ..auth import get_current_admin, get_current_customer_identity
-from ..notifications.push_service import send_push, send_push_to_admins
+from ..notifications.notification_service import (
+    notify_admin_new_order,
+    notify_admin_order_cancelled,
+    notify_customer_feedback_request,
+    notify_customer_order_created,
+    notify_customer_status_changed,
+)
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -45,11 +51,8 @@ def create_order(
         new_order = crud.create_order(db, order, customer_id=int(customer_identity["customer_id"]))
         
         # Notify all active admins about the new order
-        send_push_to_admins(
-            title="New Order",
-            body=f"A new order #{new_order.order_number} has been placed.",
-            db=db
-        )
+        notify_admin_new_order(new_order, db=db)
+        notify_customer_order_created(new_order)
         
         return new_order
     except ValueError as e:
@@ -120,11 +123,7 @@ def cancel_order(
     db.refresh(order)
     
     # Notify all active admins about the cancellation
-    send_push_to_admins(
-        title="Order Cancelled",
-        body=f"Order #{order.order_number} has been cancelled.",
-        db=db
-    )
+    notify_admin_order_cancelled(order, db=db)
     
     return crud.get_order(db, order_id)
 
@@ -141,11 +140,9 @@ def update_order_status(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     if order.fcm_token:
-        send_push(
-            token=order.fcm_token,
-            title="Order Update",
-            body=f"Your order is now {order.status}"
-        )
+        notify_customer_status_changed(order)
+    if order.status == schemas.OrderStatus.COMPLETED:
+        notify_customer_feedback_request(order)
     return order
 
 

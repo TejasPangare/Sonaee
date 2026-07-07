@@ -1,3 +1,4 @@
+from .email_service import send_feedback_request, send_order_confirmation
 from .push_service import send_push, send_push_to_admins
 
 
@@ -26,7 +27,7 @@ def notify_admin_order_cancelled(order, body=None, db=None):
 
 
 def notify_customer_order_created(order):
-    return None
+    return send_order_confirmation(order)
 
 
 def notify_customer_status_changed(order):
@@ -38,7 +39,7 @@ def notify_customer_status_changed(order):
 
 
 def notify_customer_feedback_request(order):
-    return None
+    return send_feedback_request(order)
 
 
 def notify_contact_inquiry(inquiry):
