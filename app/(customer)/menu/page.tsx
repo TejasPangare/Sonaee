@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { CategoryTabs } from "@/components/customer/category-tabs"
+import { FeaturedDishesSection } from "@/components/customer/featured-dishes-section"
 import { MenuItemCard } from "@/components/customer/menu-item-card"
 import { AnimatedSection } from "@/components/ui/animated-section"
 import { apiClient, Category, MenuItemWithCategory } from "@/lib/api-client"
@@ -75,6 +76,8 @@ export default function MenuPage() {
             </div>
           </div>
         </AnimatedSection>
+
+        <FeaturedDishesSection items={menuItems} />
 
         <AnimatedSection animation="fade-up" delay={100} className="mb-8 space-y-4">
           <div className="relative max-w-md">

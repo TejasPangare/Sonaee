@@ -29,6 +29,10 @@ def get_category(db: Session, category_id: int):
     return db.query(models.Category).filter(models.Category.id == category_id).first()
 
 
+def get_category_by_name(db: Session, name: str):
+    return db.query(models.Category).filter(models.Category.name == name).first()
+
+
 def create_category(db: Session, category: schemas.CategoryCreate):
     db_category = models.Category(**category.model_dump())
     db.add(db_category)
@@ -52,6 +56,53 @@ def delete_category(db: Session, category_id: int):
     db_category = get_category(db, category_id)
     if db_category:
         db.delete(db_category)
+        db.commit()
+        return True
+    return False
+
+
+# Event Category CRUD
+EVENT_CATEGORY_TYPE = "event_category"
+
+
+def get_event_categories(db: Session, active_only: bool = False):
+    return get_content_items(db, item_type=EVENT_CATEGORY_TYPE, active_only=active_only)
+
+
+def get_event_category(db: Session, item_id: int):
+    item = get_content_item(db, item_id)
+    if item and item.type == EVENT_CATEGORY_TYPE:
+        return item
+    return None
+
+
+def create_event_category(db: Session, item: schemas.ContentItemCreate):
+    payload = item.model_dump()
+    payload["type"] = EVENT_CATEGORY_TYPE
+    db_item = models.ContentItem(**payload)
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def update_event_category(db: Session, item_id: int, item: schemas.ContentItemUpdate):
+    db_item = get_event_category(db, item_id)
+    if db_item:
+        update_data = item.model_dump(exclude_unset=True)
+        update_data.pop("type", None)
+        for key, value in update_data.items():
+            setattr(db_item, key, value)
+        db_item.type = EVENT_CATEGORY_TYPE
+        db.commit()
+        db.refresh(db_item)
+    return db_item
+
+
+def delete_event_category(db: Session, item_id: int):
+    db_item = get_event_category(db, item_id)
+    if db_item:
+        db.delete(db_item)
         db.commit()
         return True
     return False

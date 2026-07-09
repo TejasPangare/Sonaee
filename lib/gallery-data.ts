@@ -93,3 +93,36 @@ export const homepageGalleryItems: GalleryItem[] = [
     aspect: 'aspect-[16/11]',
   },
 ]
+
+type GalleryContentItem = {
+  type: string
+  title: string
+  description?: string | null
+  image_url?: string | null
+  tag?: string | null
+  subtitle?: string | null
+  metadata_json?: string | null
+}
+
+export function mapContentItemsToGalleryItems(items: GalleryContentItem[]): GalleryItem[] {
+  return items
+    .filter((item) => item.type === 'gallery')
+    .map((item) => ({
+      src: item.image_url || '/placeholder.svg',
+      title: item.title,
+      description: item.description || '',
+      category: (item.tag || item.subtitle || 'Restaurant') as GalleryItem['category'],
+      aspect: parseGalleryAspect(item.metadata_json),
+    }))
+}
+
+function parseGalleryAspect(metadataJson?: string | null) {
+  if (!metadataJson) return 'aspect-[4/5]'
+
+  try {
+    const parsed = JSON.parse(metadataJson) as { aspect?: string }
+    return parsed.aspect || 'aspect-[4/5]'
+  } catch {
+    return 'aspect-[4/5]'
+  }
+}

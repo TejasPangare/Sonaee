@@ -10,7 +10,6 @@ import {
   Crown,
   Leaf,
   MapPin,
-  ShieldCheck,
   Snowflake,
   Sparkles,
   Users,
@@ -27,8 +26,9 @@ import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { useSiteSettings } from "@/lib/site-settings-context";
 import { GallerySection } from "@/components/customer/gallery-section";
 import { ContactUsForm } from "@/components/customer/contact-us-form";
-import { homepageGalleryItems } from "@/lib/gallery-data";
-import { apiClient, Category, MenuItemWithCategory } from "@/lib/api-client";
+import { BrandLogo } from "@/components/brand-logo";
+import { homepageGalleryItems, mapContentItemsToGalleryItems, type GalleryItem } from "@/lib/gallery-data";
+import { apiClient } from "@/lib/api-client";
 import { useEffect, useState } from "react";
 
 const testimonials = [
@@ -100,18 +100,16 @@ function StatCounter({
 
 export default function HomePage() {
   const { settings } = useSiteSettings()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [menuItems, setMenuItems] = useState<MenuItemWithCategory[]>([])
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(homepageGalleryItems)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [categoriesData, menuItemsData] = await Promise.all([
-          apiClient.getCategories(),
-          apiClient.getMenuItems({ availableOnly: true })
-        ])
-        setCategories(categoriesData)
-        setMenuItems(menuItemsData)
+        const siteContent = await apiClient.getSiteContent()
+        const galleryContentItems = mapContentItemsToGalleryItems(siteContent.items)
+        if (galleryContentItems.length > 0) {
+          setGalleryItems(galleryContentItems)
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error)
       }
@@ -119,8 +117,7 @@ export default function HomePage() {
 
     fetchData()
   }, [])
-
-  const featuredItems = menuItems.slice(0, 4)
+  const galleryPreviewItems = galleryItems.slice(0, 6)
 
   return (
     <div>
@@ -174,7 +171,7 @@ export default function HomePage() {
                       <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </Button>
                   </Link>
-                  <Link href="/contact#banquet">
+                  <Link href="/banquet#banquet">
                     <Button
                       size="lg"
                       variant="outline"
@@ -421,7 +418,7 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                <Link href="/contact#banquet">
+                  <Link href="/banquet#banquet">
                   <Button size="lg" className="gap-2">
                     Book Event
                     <ArrowRight className="h-4 w-4" />
@@ -433,102 +430,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-background py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection animation="fade-up" className="mb-10 text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">Event Categories</p>
-            <h2 className="mb-3 text-4xl text-foreground md:text-5xl">
-              Banquet experiences for every occasion.
-            </h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              From intimate family moments to elegant celebrations, our venue is designed to host each event with warmth and attention to detail.
-            </p>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              {
-                title: "Wedding",
-                description: "Elegant vegetarian celebrations curated for your most special day.",
-                image: "/assets/hotel_7.png",
-              },
-              {
-                title: "Reception",
-                description: "A refined space for welcoming guests and celebrating together.",
-                image: "/assets/hotel_4.png",
-              },
-              {
-                title: "Engagement",
-                description: "A graceful venue for memorable beginnings and close family gatherings.",
-                image: "/assets/hotel_3.png",
-              },
-              {
-                title: "Birthday",
-                description: "Joyful celebrations with comforting food and lively hospitality.",
-                image: "/assets/hotel_5.png",
-              },
-              {
-                title: "Baby Shower",
-                description: "Warm and intimate setups for family-centered celebrations.",
-                image: "/assets/hotel_2.png",
-              },
-              {
-                title: "Corporate Events",
-                description: "Professional hosting with polished dining for teams and guests.",
-                image: "/assets/hotel_8.png",
-              },
-              {
-                title: "Anniversary",
-                description: "A premium setting for meaningful milestones and shared memories.",
-                image: "/assets/hotel_1.png",
-              },
-              {
-                title: "Naming Ceremony",
-                description: "Thoughtfully arranged celebrations rooted in family and tradition.",
-                image: "/assets/hotel_6.png",
-              },
-            ].map((event, i) => (
-              <AnimatedSection key={event.title} animation="fade-up" delay={i * 70}>
-                <Card className="group h-full overflow-hidden border-border/60 bg-card/88">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={event.image}
-                      alt={event.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/18 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-2xl text-white">{event.title}</h3>
-                    </div>
-                  </div>
-                  <CardContent className="flex h-full flex-col p-6">
-                    <p className="mb-6 text-sm leading-6 text-muted-foreground">
-                      {event.description}
-                    </p>
-                    <div className="mt-auto">
-                      <Link href="/contact#banquet">
-                        <Button variant="outline" className="w-full justify-between">
-                          Book Event
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <GallerySection
-        id="gallery"
-        title="A closer look at our spaces and celebrations."
-        subtitle="Explore the restaurant, banquet hall, food presentation, and event-ready setups that help guests feel confident before they visit."
-        items={homepageGalleryItems}
-        viewMoreHref="/#gallery"
-      />
+        <GallerySection
+          id="gallery"
+          title="A closer look at our spaces and celebrations."
+          subtitle="Explore the restaurant, banquet hall, food presentation, and event-ready setups that help guests feel confident before they visit."
+          items={galleryPreviewItems}
+          viewMoreHref="/gallery"
+          viewMoreLabel="View Full Gallery"
+          showCategoryTabs={false}
+          maxItems={6}
+        />
 
       <section className="bg-background py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -785,142 +696,6 @@ export default function HomePage() {
               </div>
             </AnimatedSection>
           </div>
-        </div>
-      </section>
-
-      <section className="bg-muted py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection animation="fade-up" className="mb-10 text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">Explore</p>
-            <h2 className="mb-3 text-4xl text-foreground md:text-5xl">
-              Explore Our Menu
-            </h2>
-            <p className="mx-auto max-w-xl text-muted-foreground">
-              From appetizing starters to decadent desserts, discover dishes crafted with passion.
-            </p>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
-            {categories.map((category, i) => (
-              <AnimatedSection
-                key={category.id}
-                animation="fade-up"
-                delay={i * 75}
-              >
-                <Link href={`/menu?category=${category.id}`}>
-                  <Card className="premium-panel group h-full cursor-pointer overflow-hidden border-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                    <div className="relative aspect-square bg-muted">
-                      <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(180deg,rgba(196,147,82,0.22),rgba(78,51,31,0.52))]">
-                        <div className="text-center text-white">
-                          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-white/35 bg-white/10">
-                            <Utensils className="h-5 w-5" />
-                          </div>
-                          <p className="text-xs text-white/80">Discover</p>
-                        </div>
-                      </div>
-                      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 z-20 p-4">
-                        <h3 className="text-2xl text-white">
-                          {category.name}
-                        </h3>
-                        <p className="line-clamp-1 text-sm text-white/80">
-                          {category.description}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-background py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection animation="fade-up">
-            <div className="mb-10 flex items-end justify-between">
-              <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">Featured Dishes</p>
-                <h2 className="mb-3 text-4xl text-foreground md:text-5xl">
-                  Popular Dishes
-                </h2>
-                <p className="text-muted-foreground">
-                  Signature favorites, ready to order in just a few taps.
-                </p>
-              </div>
-              <Link href="/menu" className="hidden sm:block">
-                <Button variant="outline" className="gap-2 rounded-full bg-transparent">
-                  Order More
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {featuredItems.map((item, i) => (
-              <AnimatedSection
-                key={item.id}
-                animation="fade-up"
-                delay={i * 100}
-              >
-                <Link href="/menu" className="block h-full">
-                  <Card className="group h-full overflow-hidden border-border/60 bg-card/88">
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <Image
-                        src={item.image_url || "/placeholder.svg"}
-                        alt={item.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                      <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
-                        <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md">
-                          Popular
-                        </span>
-                        <span className="rounded-full bg-white/92 px-3 py-1 text-sm font-semibold text-foreground">
-                          Rs. {item.price.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <CardContent className="flex h-full flex-col p-6">
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="mb-2 text-2xl text-foreground">{item.name}</h3>
-                          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-auto flex items-center justify-between pt-5">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <ShieldCheck className="h-4 w-4 text-primary" />
-                          Ready to order
-                        </div>
-                        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                          Order Now
-                          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </AnimatedSection>
-            ))}
-          </div>
-
-          <AnimatedSection
-            animation="fade-up"
-            className="mt-8 text-center sm:hidden"
-          >
-            <Link href="/menu">
-              <Button variant="outline" className="gap-2 rounded-full bg-transparent">
-                Order Full Menu
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </AnimatedSection>
         </div>
       </section>
 

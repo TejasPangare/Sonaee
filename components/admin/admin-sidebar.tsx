@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAdmin } from '@/lib/admin-context'
 import { useState } from 'react'
+import { BrandLogo } from '@/components/brand-logo'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -45,10 +46,14 @@ export function AdminSidebar() {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           {!collapsed && (
-            <div>
-              <span className="font-bold text-sidebar-primary">Sonaee Veg</span>
-              <span className="font-light"> Admin</span>
-            </div>
+            <Link href="/admin/dashboard" className="block">
+              <BrandLogo className="w-[138px]" priority />
+            </Link>
+          )}
+          {collapsed && (
+            <Link href="/admin/dashboard" className="block">
+              <BrandLogo className="w-10" />
+            </Link>
           )}
           <Button
             variant="ghost"

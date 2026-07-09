@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, Camera, Expand, Search, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Camera, Expand, ZoomIn, ZoomOut } from 'lucide-react'
 
 import { AnimatedSection } from '@/components/ui/animated-section'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,9 @@ type GallerySectionProps = {
   subtitle: string
   items: GalleryItem[]
   viewMoreHref: string
+  viewMoreLabel?: string
+  showCategoryTabs?: boolean
+  maxItems?: number
 }
 
 const masonryColumnsClass = 'columns-1 gap-6 sm:columns-2 xl:columns-3'
@@ -27,14 +30,23 @@ export function GallerySection({
   subtitle,
   items,
   viewMoreHref,
+  viewMoreLabel = "View Complete Gallery",
+  showCategoryTabs = true,
+  maxItems,
 }: GallerySectionProps) {
   const [activeCategory, setActiveCategory] = useState<(typeof galleryCategories)[number]>('All')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [isZoomed, setIsZoomed] = useState(false)
 
+  const previewItems = typeof maxItems === "number" ? items.slice(0, maxItems) : items
   const filteredItems = useMemo(
-    () => (activeCategory === 'All' ? items : items.filter((item) => item.category === activeCategory)),
-    [activeCategory, items]
+    () =>
+      showCategoryTabs
+        ? activeCategory === 'All'
+          ? previewItems
+          : previewItems.filter((item) => item.category === activeCategory)
+        : previewItems,
+    [activeCategory, previewItems, showCategoryTabs]
   )
 
   useEffect(() => {
@@ -99,22 +111,24 @@ export function GallerySection({
           <p className="mx-auto max-w-2xl text-muted-foreground">{subtitle}</p>
         </AnimatedSection>
 
-        <AnimatedSection animation="fade-up" delay={120} className="mb-8 flex flex-wrap justify-center gap-3">
-          {galleryCategories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              onClick={() => setActiveCategory(category)}
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
-                activeCategory === category
-                  ? 'bg-primary text-primary-foreground shadow-[0_14px_30px_rgba(196,147,82,0.22)]'
-                  : 'border border-border/70 bg-card/80 text-muted-foreground hover:bg-secondary hover:text-foreground'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </AnimatedSection>
+        {showCategoryTabs ? (
+          <AnimatedSection animation="fade-up" delay={120} className="mb-8 flex flex-wrap justify-center gap-3">
+            {galleryCategories.map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setActiveCategory(category)}
+                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                  activeCategory === category
+                    ? 'bg-primary text-primary-foreground shadow-[0_14px_30px_rgba(196,147,82,0.22)]'
+                    : 'border border-border/70 bg-card/80 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </AnimatedSection>
+        ) : null}
 
         <div className={masonryColumnsClass}>
           {filteredItems.map((item, index) => (
@@ -161,11 +175,10 @@ export function GallerySection({
         </div>
 
         <AnimatedSection animation="fade-up" delay={160} className="mt-10 text-center">
-          <p className="mb-4 text-lg text-muted-foreground">Want to see more?</p>
           <Link href={viewMoreHref}>
             <Button variant="outline" className="gap-2 rounded-full bg-transparent">
-              View Complete Gallery
-              <ArrowRight className="h-4 w-4" />
+              {viewMoreLabel}
+              {/* <ArrowRight className="h-4 w-4" /> */}
             </Button>
           </Link>
         </AnimatedSection>
@@ -180,10 +193,17 @@ export function GallerySection({
           }
         }}
       >
-        <DialogContent className="max-w-6xl border-border/70 bg-background/96 p-3 sm:p-5" showCloseButton>
+        <DialogContent
+          className={
+            isZoomed
+              ? 'h-[100dvh] w-[100vw] max-w-none border-0 bg-black/95 p-4 sm:p-8'
+              : 'max-w-6xl border-border/70 bg-background/96 p-3 sm:p-5'
+          }
+          showCloseButton
+        >
           {selectedItem ? (
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="overflow-hidden rounded-[1.5rem] border border-border/60 bg-black/4">
+            <div className={isZoomed ? 'flex h-full items-center justify-center' : 'grid gap-4'}>
+              <div className={isZoomed ? 'h-full w-full' : 'overflow-hidden rounded-[1.5rem] border border-border/60 bg-black/4'}>
                 <div className="relative">
                   <button
                     type="button"
@@ -191,22 +211,28 @@ export function GallerySection({
                     className="relative block w-full overflow-hidden"
                   >
                     <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md">
-                      <Search className="h-3.5 w-3.5" />
+                      {isZoomed ? <ZoomOut className="h-3.5 w-3.5" /> : <ZoomIn className="h-3.5 w-3.5" />}
                       {isZoomed ? 'Zoom Out' : 'Zoom In'}
                     </div>
-                    <div className="relative aspect-[16/11] overflow-auto bg-black">
+                    <div
+                      className={
+                        isZoomed
+                          ? 'relative h-[calc(100dvh-4rem)] w-[min(100%,70rem)] overflow-hidden rounded-[1.5rem] bg-black sm:h-[calc(100dvh-8rem)]'
+                          : 'relative aspect-[16/11] overflow-hidden bg-black transition-all duration-500'
+                      }
+                    >
                       <Image
                         src={selectedItem.src}
                         alt={selectedItem.title || selectedItem.category}
                         fill
                         sizes="100vw"
                         priority
-                        className={`object-cover transition-transform duration-500 ${isZoomed ? 'scale-[1.3]' : 'scale-100'}`}
+                        className={isZoomed ? 'object-contain' : 'object-cover transition-all duration-500'}
                       />
                     </div>
                   </button>
 
-                  {filteredItems.length > 1 ? (
+                  {!isZoomed && filteredItems.length > 1 ? (
                     <>
                       <button
                         type="button"
@@ -229,7 +255,7 @@ export function GallerySection({
                 </div>
               </div>
 
-              <div className="flex flex-col justify-between rounded-[1.5rem] border border-border/60 bg-card/82 p-6">
+              {!isZoomed && <div className="flex flex-col justify-between rounded-[1.5rem] border border-border/60 bg-card/82 p-6">
                 <div>
                   <div className="mb-4 inline-flex rounded-full border border-border/60 bg-background/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
                     {selectedItem.category}
@@ -249,33 +275,11 @@ export function GallerySection({
                     className="w-full justify-between"
                     onClick={() => setIsZoomed((value) => !value)}
                   >
-                    {isZoomed ? 'Reduce Zoom' : 'Zoom Image'}
-                    <Search className="h-4 w-4" />
-                  </Button>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button type="button" variant="outline" className="justify-between" onClick={goToPrevious}>
-                      Previous
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <Button type="button" variant="outline" className="justify-between" onClick={goToNext}>
-                      Next
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-between"
-                    onClick={() => {
-                      setSelectedIndex(null)
-                      setIsZoomed(false)
-                    }}
-                  >
-                    Close Gallery
-                    <X className="h-4 w-4" />
+                    {isZoomed ? 'Zoom Out' : 'Zoom Image'}
+                    {isZoomed ? <ZoomOut className="h-4 w-4" /> : <ZoomIn className="h-4 w-4" />}
                   </Button>
                 </div>
-              </div>
+              </div>}
             </div>
           ) : null}
         </DialogContent>

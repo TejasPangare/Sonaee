@@ -19,8 +19,8 @@ const bodyFont = Manrope({
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Hotel Sonaee Veg Restaurant | Fine Dining & Takeaway',
-  description: 'Experience exceptional cuisine at Hotel Sonaee Veg Restaurant. Order takeaway online or dine with us for an unforgettable culinary experience.',
+  title: 'Sonaee Veg Family Restaurant | Fine Dining & Takeaway',
+  description: 'Experience exceptional cuisine at Sonaee Veg Family Restaurant. Order takeaway online or dine with us for an unforgettable culinary experience.',
   generator: 'v0.app',
   icons: {
     icon: [

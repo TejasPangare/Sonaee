@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { GalleryManager } from '@/components/admin/gallery-manager'
+import { EventCategoryManager } from '@/components/admin/event-category-manager'
 import { useAdmin } from '@/lib/admin-context'
 import { apiClient } from '@/lib/api-client'
 import {
@@ -151,10 +153,6 @@ export default function AdminContentPage() {
                     <Input id="brandLabel" value={settings.brandLabel} onChange={(e) => updateSetting('brandLabel', e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="logoText">Logo Text</Label>
-                    <Input id="logoText" value={settings.logoText} onChange={(e) => updateSetting('logoText', e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="phoneDisplay">Phone Display</Label>
                     <Input id="phoneDisplay" value={settings.phoneDisplay} onChange={(e) => updateSetting('phoneDisplay', e.target.value)} />
                   </div>
@@ -242,6 +240,10 @@ export default function AdminContentPage() {
             )}
           </CardContent>
         </Card>
+
+        <GalleryManager token={token} />
+
+        <EventCategoryManager token={token} />
 
         {user?.is_superadmin ? (
           <Card>

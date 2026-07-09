@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAdmin } from '@/lib/admin-context'
 import { AdminSidebar } from './admin-sidebar'
+import { BrandSplash } from '@/components/brand-splash'
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -23,11 +24,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [mounted, isAuthenticated, router])
 
   if (!mounted || !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    )
+    return <BrandSplash className="min-h-screen" />
   }
 
   return (

@@ -9,6 +9,7 @@ import { useCart } from '@/lib/cart-context'
 import { useSiteSettings } from '@/lib/site-settings-context'
 import { useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { BrandLogo } from '@/components/brand-logo'
 
 type NavLink = {
   href: string
@@ -30,9 +31,8 @@ export function Header() {
     () => [
       { href: '/', label: 'Home', route: '/' },
       { href: '/menu', label: 'Menu', route: '/menu' },
-      { href: '/contact#banquet', label: 'Banquet', route: '/contact', hash: 'banquet' },
-      { href: '/#gallery', label: 'Gallery', route: '/', hash: 'gallery' },
-      { href: '/contact', label: 'Contact', route: '/contact' },
+      { href: '/banquet#banquet', label: 'Banquet', route: '/banquet', hash: 'banquet' },
+      { href: '/gallery', label: 'Gallery', route: '/gallery' },
     ],
     []
   )
@@ -63,7 +63,7 @@ export function Header() {
   const isNavActive = (link: NavLink) => {
     if (pathname !== link.route) return false
     if (link.hash) return currentHash === link.hash
-    return currentHash === '' || link.route !== '/contact'
+    return currentHash === '' || link.route !== '/banquet'
   }
 
   return (
@@ -71,15 +71,7 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-18 items-center justify-between gap-4 py-3 md:h-22">
           <Link href="/" className="flex shrink-0 items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary shadow-soft">
-              {settings.logoText}
-            </div>
-            <div className="leading-none">
-              <span className="block text-2xl text-foreground">{settings.shortName}</span>
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.3em] text-primary/80">
-                {settings.brandLabel}
-              </span>
-            </div>
+            <BrandLogo className="w-[124px] max-h-[50px] sm:w-[150px] sm:max-h-[56px] md:w-[170px] md:max-h-[90px]" priority />
           </Link>
 
           <nav className="hidden flex-1 items-center justify-center md:flex">
@@ -164,18 +156,10 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-80 border-l border-border/70 bg-background/96 p-0">
                 <div className="flex h-full flex-col">
-                  <div className="border-b border-border/70 px-6 py-6">
-                    <div className="mb-5 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">
-                        {settings.logoText}
-                      </div>
-                      <div>
-                        <p className="text-xl text-foreground">{settings.shortName}</p>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary/80">
-                          {settings.brandLabel}
-                        </p>
-                      </div>
-                    </div>
+                <div className="border-b border-border/70 px-6 py-6">
+                  <div className="mb-5 flex items-center gap-3">
+                    <BrandLogo className="w-[140px]" priority />
+                  </div>
                     <Link href="/menu" onClick={() => setIsOpen(false)}>
                       <Button className="w-full justify-between">
                         Start Ordering

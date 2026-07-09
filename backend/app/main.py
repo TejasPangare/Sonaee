@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import engine, Base
-from .routers import categories, menu_items, tables, orders, auth, admin, customers, content, inquiries
+from .routers import categories, menu_items, tables, orders, auth, admin, customers, content, inquiries, event_categories
 from .config import settings
 from .notifications import firebase_init
 
@@ -34,6 +34,7 @@ app.include_router(tables.router, prefix=settings.api_v1_prefix)
 app.include_router(orders.router, prefix=settings.api_v1_prefix)
 app.include_router(customers.router, prefix=settings.api_v1_prefix)
 app.include_router(content.router, prefix=settings.api_v1_prefix)
+app.include_router(event_categories.router, prefix=settings.api_v1_prefix)
 app.include_router(inquiries.router, prefix=settings.api_v1_prefix)
 
 

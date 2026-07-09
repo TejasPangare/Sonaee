@@ -2,7 +2,7 @@ import React from "react"
 import { AdminProvider } from '@/lib/admin-context'
 
 export const metadata = {
-  title: 'Admin Dashboard | Hotel Sonaee Veg',
+  title: 'Admin Dashboard | Sonaee Veg Family Restaurant',
   description: 'Manage orders, menu, and tables',
 }
 

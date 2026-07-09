@@ -292,6 +292,37 @@ class ApiClient {
     return this.request<ContentItem[]>(`/api/admin/content/items${query}`, { token });
   }
 
+  async getEventCategories(token: string, activeOnly = false) {
+    const query = activeOnly ? '?active_only=true' : '';
+    return this.request<EventCategory[]>(`/api/admin/event-categories${query}`, { token });
+  }
+
+  async createEventCategory(data: EventCategoryCreate, token: string) {
+    return this.request<EventCategory>('/api/admin/event-categories', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'event_category',
+        ...data,
+      }),
+      token,
+    });
+  }
+
+  async updateEventCategory(id: number, data: EventCategoryUpdate, token: string) {
+    return this.request<EventCategory>(`/api/admin/event-categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      token,
+    });
+  }
+
+  async deleteEventCategory(id: number, token: string) {
+    return this.request<{ success: boolean }>(`/api/admin/event-categories/${id}`, {
+      method: 'DELETE',
+      token,
+    });
+  }
+
   async createContentItem(data: ContentItemCreate, token: string) {
     return this.request<ContentItem>('/api/admin/content/items', {
       method: 'POST',
@@ -313,6 +344,26 @@ class ApiClient {
       method: 'DELETE',
       token,
     });
+  }
+
+  async uploadContentImage(file: File, token: string) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${this.baseUrl}/api/admin/content/upload-image`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
+      throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json() as Promise<{ url: string }>;
   }
 
   async registerAdmin(data: AdminCreateRequest, token: string) {
@@ -614,6 +665,34 @@ export interface ContentItemUpdate {
   cta_href?: string;
   tag?: string;
   metadata_json?: string;
+  display_order?: number;
+  is_active?: boolean;
+}
+
+export interface EventCategory {
+  id: number;
+  type: 'event_category';
+  title: string;
+  description?: string;
+  image_url?: string;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface EventCategoryCreate {
+  title: string;
+  description?: string;
+  image_url?: string;
+  display_order?: number;
+  is_active?: boolean;
+}
+
+export interface EventCategoryUpdate {
+  title?: string;
+  description?: string;
+  image_url?: string;
   display_order?: number;
   is_active?: boolean;
 }

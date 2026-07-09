@@ -3,14 +3,14 @@
 import Link from 'next/link'
 import { ArrowUpRight, Clock, Facebook, Globe, Instagram, Mail, MapPin, Phone, Youtube } from 'lucide-react'
 
+import { BrandLogo } from '@/components/brand-logo'
 import { useSiteSettings } from '@/lib/site-settings-context'
 
 const quickLinks = [
   { href: '/', label: 'Home' },
   { href: '/menu', label: 'Menu' },
-  { href: '/contact#banquet', label: 'Banquet' },
-  { href: '/about#gallery', label: 'Gallery' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/banquet#banquet', label: 'Banquet' },
+  { href: '/gallery', label: 'Gallery' },
 ]
 
 export function Footer() {
@@ -44,13 +44,7 @@ export function Footer() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="rounded-[1.75rem] border border-sidebar-border bg-white/5 p-6">
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-sidebar-primary/30 bg-sidebar-primary/10 text-sm font-semibold text-sidebar-primary">
-                  {settings.logoText}
-                </div>
-                <div>
-                  <span className="block text-2xl text-sidebar-foreground">{settings.shortName}</span>
-                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-sidebar-primary/85">{settings.brandLabel}</span>
-                </div>
+                <BrandLogo className="w-[150px]" priority />
               </div>
               <p className="mb-5 text-sm leading-relaxed text-sidebar-foreground/70">{settings.description}</p>
               <div className="flex flex-wrap gap-3">

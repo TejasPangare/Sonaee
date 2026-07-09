@@ -38,7 +38,7 @@ export function FloatingActions() {
             <ShoppingBag className="h-4 w-4" />
           </Button>
         </Link>
-        <Link href="/contact#banquet">
+        <Link href="/banquet#banquet">
           <Button variant="secondary" className="min-w-[164px] justify-between">
             Book Event
             <CalendarDays className="h-4 w-4" />
@@ -72,7 +72,7 @@ export function FloatingActions() {
             Order
           </Link>
           <Link
-            href="/contact#banquet"
+            href="/banquet#banquet"
             className="flex flex-col items-center justify-center gap-1 rounded-[1rem] bg-secondary py-2 text-[11px] font-semibold text-secondary-foreground"
           >
             <CalendarDays className="h-4 w-4" />

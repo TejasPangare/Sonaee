@@ -4,7 +4,6 @@ export type SiteSettings = {
   hotelName: string
   shortName: string
   brandLabel: string
-  logoText: string
   description: string
   phoneDisplay: string
   phoneNumber: string
@@ -30,7 +29,6 @@ export type SiteSettings = {
 type SiteSettingsMetadata = Partial<{
   shortName: string
   brandLabel: string
-  logoText: string
   phoneDisplay: string
   phoneNumber: string
   whatsappNumber: string
@@ -50,10 +48,9 @@ type SiteSettingsMetadata = Partial<{
 }>
 
 export const defaultSiteSettings: SiteSettings = {
-  hotelName: 'Hotel Sonaee Veg',
+  hotelName: 'Sonaee Veg Family Restaurant',
   shortName: 'Sonaee Veg',
-  brandLabel: 'Restaurant',
-  logoText: 'SV',
+  brandLabel: 'Family Restaurant',
   description: 'Premium vegetarian dining for everyday meals, family gatherings, and banquet celebrations.',
   phoneDisplay: '(555) 123-4567',
   phoneNumber: '+15551234567',
@@ -105,7 +102,6 @@ export function getSiteSettingsFromSection(section?: ContentSection | null): Sit
   const hotelName = section?.title || defaultSiteSettings.hotelName
   const shortName = metadata.shortName || section?.subtitle || defaultSiteSettings.shortName
   const brandLabel = metadata.brandLabel || defaultSiteSettings.brandLabel
-  const logoText = metadata.logoText || defaultSiteSettings.logoText
   const description = section?.description || defaultSiteSettings.description
   const phoneDisplay = metadata.phoneDisplay || defaultSiteSettings.phoneDisplay
   const phoneNumber = metadata.phoneNumber || defaultSiteSettings.phoneNumber
@@ -118,7 +114,6 @@ export function getSiteSettingsFromSection(section?: ContentSection | null): Sit
     hotelName,
     shortName,
     brandLabel,
-    logoText,
     description,
     phoneDisplay,
     phoneNumber,
@@ -146,7 +141,6 @@ export function getSiteSettingsMetadata(settings: SiteSettings) {
   return {
     shortName: settings.shortName,
     brandLabel: settings.brandLabel,
-    logoText: settings.logoText,
     phoneDisplay: settings.phoneDisplay,
     phoneNumber: settings.phoneNumber,
     whatsappNumber: settings.whatsappNumber,
