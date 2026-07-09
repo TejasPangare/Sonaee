@@ -179,7 +179,7 @@ export function GallerySection({
             <Button variant="outline" className="gap-2 rounded-full bg-transparent">
               {viewMoreLabel}
               {/* <ArrowRight className="h-4 w-4" /> */}
-            </Button>
+            </Button> 
           </Link>
         </AnimatedSection>
       </div>
@@ -202,7 +202,7 @@ export function GallerySection({
           showCloseButton
         >
           {selectedItem ? (
-            <div className={isZoomed ? 'flex h-full items-center justify-center' : 'grid gap-4'}>
+            <div >
               <div className={isZoomed ? 'h-full w-full' : 'overflow-hidden rounded-[1.5rem] border border-border/60 bg-black/4'}>
                 <div className="relative">
                   <button
@@ -213,7 +213,7 @@ export function GallerySection({
                     <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md">
                       {isZoomed ? <ZoomOut className="h-3.5 w-3.5" /> : <ZoomIn className="h-3.5 w-3.5" />}
                       {isZoomed ? 'Zoom Out' : 'Zoom In'}
-                    </div>
+                    </div>  
                     <div
                       className={
                         isZoomed

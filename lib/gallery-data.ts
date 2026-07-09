@@ -28,6 +28,87 @@ export const galleryCategories = [
   'Stage Setup',
 ] as const
 
+export type GalleryCategory = Exclude<(typeof galleryCategories)[number], 'All'>
+
+const galleryCategorySet = new Set<GalleryCategory>(
+  galleryCategories.filter((category): category is GalleryCategory => category !== 'All')
+)
+
+export type GalleryCollection = {
+  category: GalleryCategory
+  title: string
+  description: string
+  ctaLabel: string
+  ctaHref: string
+  coverImage: GalleryItem
+  items: GalleryItem[]
+}
+
+const categoryMeta: Record<
+  GalleryCategory,
+  {
+    title: string
+    description: string
+    ctaLabel: string
+    ctaHref: string
+  }
+> = {
+  Restaurant: {
+    title: 'Restaurant',
+    description: 'A warm dining atmosphere with premium interiors and everyday hospitality.',
+    ctaLabel: 'View Dining',
+    ctaHref: '/menu',
+  },
+  'Banquet Hall': {
+    title: 'Banquet Hall',
+    description: 'A polished venue for receptions, family gatherings, and memorable celebrations.',
+    ctaLabel: 'Book Banquet',
+    ctaHref: '/banquet#banquet',
+  },
+  Weddings: {
+    title: 'Weddings',
+    description: 'Elegant wedding-ready spaces designed for photos, ceremonies, and hosting guests.',
+    ctaLabel: 'Plan Wedding',
+    ctaHref: '/banquet#banquet',
+  },
+  Reception: {
+    title: 'Reception',
+    description: 'Welcoming reception visuals that set the tone for the event ahead.',
+    ctaLabel: 'See Reception',
+    ctaHref: '/banquet#banquet',
+  },
+  Engagement: {
+    title: 'Engagement',
+    description: 'Stylish engagement setups that feel intimate, bright, and celebration-ready.',
+    ctaLabel: 'Explore Engagement',
+    ctaHref: '/banquet#banquet',
+  },
+  Birthday: {
+    title: 'Birthday',
+    description: 'Joyful birthday moments in a space that feels festive and relaxed.',
+    ctaLabel: 'Celebrate Birthday',
+    ctaHref: '/banquet#banquet',
+  },
+  Food: {
+    title: 'Food',
+    description: 'Freshly prepared vegetarian dishes served with care and presentation.',
+    ctaLabel: 'Browse Menu',
+    ctaHref: '/menu',
+  },
+  Decoration: {
+    title: 'Decoration',
+    description: 'Decorated event frames that add polish and personality to every occasion.',
+    ctaLabel: 'View Decor',
+    ctaHref: '/banquet#banquet',
+  },
+  'Stage Setup': {
+    title: 'Stage Setup',
+    description: 'A focal stage arrangement created for speeches, rituals, and key moments.',
+    ctaLabel: 'See Stage Setup',
+    ctaHref: '/banquet#banquet',
+  },
+}
+
 export const homepageGalleryItems: GalleryItem[] = [
   {
     src: '/assets/hotel_8.png',
@@ -107,13 +188,62 @@ type GalleryContentItem = {
 export function mapContentItemsToGalleryItems(items: GalleryContentItem[]): GalleryItem[] {
   return items
     .filter((item) => item.type === 'gallery')
-    .map((item) => ({
-      src: item.image_url || '/placeholder.svg',
-      title: item.title,
-      description: item.description || '',
-      category: (item.tag || item.subtitle || 'Restaurant') as GalleryItem['category'],
-      aspect: parseGalleryAspect(item.metadata_json),
-    }))
+    .flatMap((item) => {
+      const category = getGalleryCategoryFromContent(item)
+
+      if (!category || !item.image_url) {
+        return []
+      }
+
+      return [
+        {
+          src: item.image_url,
+          title: item.title,
+          description: item.description || '',
+          category,
+          aspect: parseGalleryAspect(item.metadata_json),
+        },
+      ]
+    })
+}
+
+export function buildGalleryCollections(items: GalleryItem[]): GalleryCollection[] {
+  return galleryCategories
+    .filter((category): category is GalleryCategory => category !== 'All')
+    .flatMap((category) => {
+      const categoryItems = items.filter((item) => item.category === category)
+
+      if (categoryItems.length === 0) {
+        return []
+      }
+
+      const meta = categoryMeta[category]
+
+      return [
+        {
+          category,
+          title: meta.title,
+          description: meta.description,
+          ctaLabel: meta.ctaLabel,
+          ctaHref: meta.ctaHref,
+          coverImage: categoryItems[0],
+          items: categoryItems,
+        },
+      ]
+    })
+}
+
+export function getGalleryCategoryMeta(category: GalleryCategory) {
+  return categoryMeta[category]
+}
+
+function getGalleryCategoryFromContent(item: GalleryContentItem): GalleryCategory | null {
+  const rawCategory = item.tag || item.subtitle || ''
+  if (!rawCategory || !galleryCategorySet.has(rawCategory as GalleryCategory)) {
+    return null
+  }
+
+  return rawCategory as GalleryCategory
 }
 
 function parseGalleryAspect(metadataJson?: string | null) {

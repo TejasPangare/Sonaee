@@ -2,23 +2,23 @@
 
 import { useEffect, useState } from "react";
 
-import { GallerySection } from "@/components/customer/gallery-section";
+import { GalleryCollections } from "@/components/customer/gallery-collections";
 import { apiClient } from "@/lib/api-client";
-import { homepageGalleryItems, mapContentItemsToGalleryItems, type GalleryItem } from "@/lib/gallery-data";
+import { mapContentItemsToGalleryItems, type GalleryItem } from "@/lib/gallery-data";
 
 export default function GalleryPage() {
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(homepageGalleryItems)
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function fetchGallery() {
       try {
         const siteContent = await apiClient.getSiteContent()
-        const galleryContentItems = mapContentItemsToGalleryItems(siteContent.items)
-        if (galleryContentItems.length > 0) {
-          setGalleryItems(galleryContentItems)
-        }
+        setGalleryItems(mapContentItemsToGalleryItems(siteContent.items))
       } catch (error) {
         console.error("Failed to fetch gallery items:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -27,13 +27,13 @@ export default function GalleryPage() {
 
   return (
     <div className="bg-background py-8 md:py-12">
-      <GallerySection
-        title="Our full gallery of spaces and celebrations."
-        subtitle="Browse the complete collection of restaurant, banquet, food, and event images, all in the same familiar visual style."
-        items={galleryItems}
-        viewMoreHref="/banquet#banquet"
-        viewMoreLabel="Book Banquet"
-      />
+      {isLoading ? (
+        <div className="mx-auto flex min-h-[50vh] max-w-7xl items-center justify-center px-4 text-sm text-muted-foreground sm:px-6 lg:px-8">
+          Loading gallery...
+        </div>
+      ) : (
+        <GalleryCollections items={galleryItems} />
+      )}
     </div>
   )
 }
