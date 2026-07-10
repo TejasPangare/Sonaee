@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
-
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Search,
@@ -53,7 +51,7 @@ export default function MenuManagementPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<number>(0);
-  const [editingItem, setEditingItem] = useState<MenuItem | {}>({});
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
@@ -137,7 +135,7 @@ export default function MenuManagementPage() {
         const newItemWithCategory: MenuItemWithCategory = { ...newItem, category: category! };
         setMenuItems((prev) => [...prev, newItemWithCategory]);
       }
-      setEditingItem({});
+      setEditingItem(null);
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Failed to save item:', error);
@@ -304,21 +302,21 @@ export default function MenuManagementPage() {
       </div>
 
       {/* Edit/Add Dialog */}
-      {editingItem && isAddDialogOpen && 
-      <MenuItemDialog
-        categories={categories}
-        open={isAddDialogOpen || !!editingItem}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingItem({});
-            setIsAddDialogOpen(false);
-          }
-        }}
-        item={editingItem}
-        menuItems={menuItems}
-        onSave={handleSaveItem}
-      />
-      }
+      {isAddDialogOpen && (
+        <MenuItemDialog
+          categories={categories}
+          open={isAddDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingItem(null);
+              setIsAddDialogOpen(false);
+            }
+          }}
+          item={editingItem}
+          menuItems={menuItems}
+          onSave={handleSaveItem}
+        />
+      )}
       
     </AdminShell>
   );
@@ -335,12 +333,29 @@ function MenuItemDialog({
   categories: Category[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  item: MenuItem | {};
-  menuItems:MenuItemWithCategory[]
+  item: MenuItem | null;
+  menuItems: MenuItemWithCategory[];
   onSave: (item: MenuItem) => void;
 }) {
-  const [formData, setFormData] = useState<Partial<MenuItem>>(
-    Object.keys(item).length != 0 ?item : {
+  const createDefaultFormData = (currentItem: MenuItem | null): Partial<MenuItem> => {
+    if (currentItem) {
+      return {
+        ...currentItem,
+        name: currentItem.name ?? "",
+        description: currentItem.description ?? "",
+        price: currentItem.price ?? 0,
+        image_url: currentItem.image_url ?? "",
+        category_id: currentItem.category_id ?? 1,
+        is_available: currentItem.is_available ?? true,
+        is_vegetarian: currentItem.is_vegetarian ?? false,
+        is_vegan: currentItem.is_vegan ?? false,
+        is_gluten_free: currentItem.is_gluten_free ?? false,
+        spice_level: currentItem.spice_level ?? 0,
+        prep_time_minutes: currentItem.prep_time_minutes ?? 15,
+      };
+    }
+
+    return {
       name: "",
       id: menuItems.length + 1,
       description: "",
@@ -353,8 +368,16 @@ function MenuItemDialog({
       is_gluten_free: false,
       spice_level: 0,
       prep_time_minutes: 15,
-    },
-  );
+    };
+  };
+
+  const [formData, setFormData] = useState<Partial<MenuItem>>(createDefaultFormData(item));
+  const [previewUrl, setPreviewUrl] = useState(item?.image_url ?? "");
+
+  useEffect(() => {
+    setFormData(createDefaultFormData(item));
+    setPreviewUrl(item?.image_url ?? "");
+  }, [item]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -399,6 +422,37 @@ function MenuItemDialog({
               }
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image-url">Image URL</Label>
+            <Input
+              id="image-url"
+              type="url"
+              value={formData.image_url || ""}
+              onChange={(e) => {
+                const nextUrl = e.target.value;
+                setFormData((prev) => ({ ...prev, image_url: nextUrl }));
+                setPreviewUrl(nextUrl);
+              }}
+              placeholder="https://example.com/image.jpg"
+            />
+            <p className="text-xs text-muted-foreground">
+              Paste a direct image link to show this item in both the admin view and the customer menu.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Image Preview</Label>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/60 bg-muted">
+              {previewUrl ? (
+                <img src={previewUrl} alt={formData.name || "Menu preview"} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  No image selected
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
