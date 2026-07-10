@@ -4,10 +4,16 @@ import { useEffect, useState } from "react";
 
 import { GalleryCollections } from "@/components/customer/gallery-collections";
 import { apiClient } from "@/lib/api-client";
-import { mapContentItemsToGalleryItems, type GalleryItem } from "@/lib/gallery-data";
+import {
+  mapContentItemsToGalleryCategories,
+  mapContentItemsToGalleryItems,
+  type GalleryCategoryCard,
+  type GalleryItem,
+} from "@/lib/gallery-data";
 
 export default function GalleryPage() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([])
+  const [galleryCategories, setGalleryCategories] = useState<GalleryCategoryCard[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -15,6 +21,7 @@ export default function GalleryPage() {
       try {
         const siteContent = await apiClient.getSiteContent()
         setGalleryItems(mapContentItemsToGalleryItems(siteContent.items))
+        setGalleryCategories(mapContentItemsToGalleryCategories(siteContent.items))
       } catch (error) {
         console.error("Failed to fetch gallery items:", error)
       } finally {
@@ -32,7 +39,7 @@ export default function GalleryPage() {
           Loading gallery...
         </div>
       ) : (
-        <GalleryCollections items={galleryItems} />
+        <GalleryCollections items={galleryItems} categories={galleryCategories} />
       )}
     </div>
   )

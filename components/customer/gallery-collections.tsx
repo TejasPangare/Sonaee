@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react'
 import { ArrowLeft, ArrowRight, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
@@ -10,16 +9,18 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import {
   buildGalleryCollections,
+  type GalleryCategoryCard,
   type GalleryItem,
 } from '@/lib/gallery-data'
 import { cn } from '@/lib/utils'
 
 type GalleryCollectionsProps = {
   items: GalleryItem[]
+  categories: GalleryCategoryCard[]
 }
 
-export function GalleryCollections({ items }: GalleryCollectionsProps) {
-  const collections = useMemo(() => buildGalleryCollections(items), [items])
+export function GalleryCollections({ items, categories }: GalleryCollectionsProps) {
+  const collections = useMemo(() => buildGalleryCollections(items, categories), [items, categories])
   const [selectedCollectionIndex, setSelectedCollectionIndex] = useState<number | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
@@ -153,12 +154,10 @@ export function GalleryCollections({ items }: GalleryCollectionsProps) {
                 >
                   <div className="premium-panel overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/88 transition-transform duration-300 group-hover:-translate-y-1">
                     <div className="relative aspect-[4/5] overflow-hidden bg-black">
-                      <Image
+                      <img
                         src={collection.coverImage.src}
                         alt={collection.coverImage.title || collection.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/24 to-transparent" />
                       <div className="absolute left-4 right-4 top-4 flex items-center justify-between gap-3">
@@ -171,7 +170,9 @@ export function GalleryCollections({ items }: GalleryCollectionsProps) {
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-5">
                         <h2 className="mb-2 text-2xl text-white">{collection.title}</h2>
-                        <p className="mb-4 max-w-md text-sm leading-6 text-white/80">{collection.description}</p>
+                        {collection.description ? (
+                          <p className="mb-4 max-w-md text-sm leading-6 text-white/80">{collection.description}</p>
+                        ) : null}
                         <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-foreground transition-transform duration-300 group-hover:translate-x-1">
                           Open Collection
                           <ChevronRight className="h-4 w-4" />
@@ -252,15 +253,12 @@ export function GalleryCollections({ items }: GalleryCollectionsProps) {
                             : 'relative aspect-[4/5] overflow-hidden bg-black transition-all duration-500 md:aspect-[16/11]'
                         }
                       >
-                        <Image
+                        <img
                           key={currentImage.src}
                           src={currentImage.src}
                           alt={currentImage.title || selectedCollection.title}
-                          fill
-                          sizes="100vw"
-                          priority
                           className={cn(
-                            'transition-all duration-300',
+                            'h-full w-full transition-all duration-300',
                             isImageReady ? 'opacity-100' : 'opacity-0',
                             isZoomed ? 'object-contain' : 'object-cover'
                           )}
@@ -302,9 +300,11 @@ export function GalleryCollections({ items }: GalleryCollectionsProps) {
                         {selectedCollection.category}
                       </div>
                       <DialogTitle className="mb-3 text-3xl text-foreground">{selectedCollection.title}</DialogTitle>
-                      <DialogDescription className="text-sm leading-7 text-muted-foreground">
-                        {selectedCollection.description}
-                      </DialogDescription>
+                  {selectedCollection.description ? (
+                    <DialogDescription className="text-sm leading-7 text-muted-foreground">
+                      {selectedCollection.description}
+                    </DialogDescription>
+                  ) : null}
                       <p className="mt-4 text-sm text-muted-foreground">
                         Viewing {selectedCollection.items.length} photo{selectedCollection.items.length === 1 ? '' : 's'} in this collection.
                       </p>

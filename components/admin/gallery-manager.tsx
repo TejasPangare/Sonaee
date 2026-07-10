@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import Image from "next/image";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -10,13 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { apiClient, type ContentItem, type ContentItemCreate, type ContentItemUpdate } from "@/lib/api-client";
-import { galleryCategories } from "@/lib/gallery-data";
 
 type GalleryFormState = {
-  title: string
-  description: string
   category: string
   imageUrl: string
   displayOrder: string
@@ -25,13 +20,9 @@ type GalleryFormState = {
 }
 
 const defaultAspect = "aspect-[4/5]"
-const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-const maxImageSizeBytes = 5 * 1024 * 1024
 
 const defaultFormState: GalleryFormState = {
-  title: "",
-  description: "",
-  category: "Restaurant",
+  category: "",
   imageUrl: "",
   displayOrder: "0",
   aspect: defaultAspect,
@@ -52,6 +43,10 @@ function sortGalleryItems(items: ContentItem[]) {
   return [...items].sort((left, right) => left.display_order - right.display_order || left.id - right.id)
 }
 
+function sortGalleryCategories(items: ContentItem[]) {
+  return [...items].sort((left, right) => left.display_order - right.display_order || left.id - right.id)
+}
+
 export function GalleryManager({ token }: { token: string | null }) {
   const [items, setItems] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -62,16 +57,10 @@ export function GalleryManager({ token }: { token: string | null }) {
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null)
   const [formState, setFormState] = useState<GalleryFormState>(defaultFormState)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState("")
-  const previewObjectUrlRef = useRef<string | null>(null)
+  const [galleryCategoryItems, setGalleryCategoryItems] = useState<ContentItem[]>([])
 
   const resetPreview = (nextUrl: string) => {
-    if (previewObjectUrlRef.current) {
-      URL.revokeObjectURL(previewObjectUrlRef.current)
-      previewObjectUrlRef.current = null
-    }
-
     setPreviewUrl(nextUrl)
   }
 
@@ -83,27 +72,27 @@ export function GalleryManager({ token }: { token: string | null }) {
   const clearForm = () => {
     setEditingItem(null)
     setFormState(defaultFormState)
-    setSelectedFile(null)
     resetPreview("")
   }
 
   const openCreateDialog = () => {
     clearForm()
+    setFormState((current) => ({
+      ...current,
+      category: galleryCategoryItems[0]?.title || "",
+    }))
     setIsDialogOpen(true)
   }
 
   const openEditDialog = (item: ContentItem) => {
     setEditingItem(item)
     setFormState({
-      title: item.title,
-      description: item.description || "",
-      category: item.tag || "Restaurant",
+      category: item.tag || "",
       imageUrl: item.image_url || "",
       displayOrder: String(item.display_order || 0),
       aspect: parseAspect(item.metadata_json),
       isActive: item.is_active,
     })
-    setSelectedFile(null)
     resetPreview(item.image_url || "")
     setIsDialogOpen(true)
   }
@@ -115,8 +104,12 @@ export function GalleryManager({ token }: { token: string | null }) {
     async function loadGallery() {
       setIsLoading(true)
       try {
-        const galleryItems = await apiClient.getContentItems(authToken, "gallery")
+        const [galleryItems, categories] = await Promise.all([
+          apiClient.getContentItems(authToken, "gallery"),
+          apiClient.getContentItems(authToken, "gallery_category"),
+        ])
         setItems(sortGalleryItems(galleryItems))
+        setGalleryCategoryItems(sortGalleryCategories(categories))
       } catch (error) {
         showMessage(error instanceof Error ? error.message : "Failed to load gallery items.", "error")
       } finally {
@@ -127,72 +120,21 @@ export function GalleryManager({ token }: { token: string | null }) {
     loadGallery()
   }, [token])
 
-  useEffect(() => {
-    return () => {
-      if (previewObjectUrlRef.current) {
-        URL.revokeObjectURL(previewObjectUrlRef.current)
-      }
-    }
-  }, [])
-
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null
-    if (!file) {
-      setSelectedFile(null)
-      resetPreview(formState.imageUrl)
-      return
-    }
-
-    if (!allowedImageTypes.includes(file.type)) {
-      showMessage("Only JPG, PNG, WEBP, and GIF images are supported.", "error")
-      event.target.value = ""
-      return
-    }
-
-    if (file.size > maxImageSizeBytes) {
-      showMessage("Image must be 5MB or smaller.", "error")
-      event.target.value = ""
-      return
-    }
-
-    if (previewObjectUrlRef.current) {
-      URL.revokeObjectURL(previewObjectUrlRef.current)
-    }
-
-    const objectUrl = URL.createObjectURL(file)
-    previewObjectUrlRef.current = objectUrl
-    setSelectedFile(file)
-    setPreviewUrl(objectUrl)
-  }
-
   const ensureImageUrl = async () => {
-    if (selectedFile) {
-      const uploadResult = await apiClient.uploadContentImage(selectedFile, token || "")
-      setFormState((current) => ({ ...current, imageUrl: uploadResult.url }))
-      resetPreview(uploadResult.url)
-      setSelectedFile(null)
-      return uploadResult.url
-    }
-
-    return formState.imageUrl
+    return formState.imageUrl.trim()
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!token) return
 
-    if (!formState.title.trim()) {
-      showMessage("Title is required.", "error")
+    if (!formState.imageUrl.trim()) {
+      showMessage("Please add an image link.", "error")
       return
     }
 
-    if (!formState.description.trim()) {
-      showMessage("Description is required.", "error")
-      return
-    }
-
-    if (!formState.category) {
-      showMessage("Please select a category.", "error")
+    if (!formState.category.trim()) {
+      showMessage("Please select a gallery category.", "error")
       return
     }
 
@@ -203,15 +145,17 @@ export function GalleryManager({ token }: { token: string | null }) {
     try {
       const imageUrl = await ensureImageUrl()
       if (!imageUrl) {
-        showMessage("Please upload an image for the gallery item.", "error")
+        showMessage("Please add an image link for the gallery item.", "error")
         setIsSaving(false)
         return
       }
 
+      const selectedCategory = galleryCategoryItems.find((category) => category.title === formState.category)
+
       const payload: ContentItemCreate | ContentItemUpdate = {
         type: "gallery",
-        title: formState.title.trim(),
-        description: formState.description.trim(),
+        title: selectedCategory?.title || formState.category.trim(),
+        description: "",
         image_url: imageUrl,
         tag: formState.category,
         display_order: Number.parseInt(formState.displayOrder, 10) || 0,
@@ -291,7 +235,7 @@ export function GalleryManager({ token }: { token: string | null }) {
           <div>
             <CardTitle>Gallery Management</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Upload, update, reorder, and remove gallery images for the homepage gallery.
+              Add, update, reorder, and remove gallery images for the homepage gallery.
             </p>
           </div>
           <Button onClick={openCreateDialog} className="gap-2">
@@ -319,26 +263,20 @@ export function GalleryManager({ token }: { token: string | null }) {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {sortedItems.map((item, index) => (
-                <Card key={item.id} className="overflow-hidden">
-                  <div className="relative aspect-[4/3] bg-muted">
-                    <Image
-                      src={item.image_url || "/placeholder.svg"}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                    />
+                <Card key={item.id} className="flex h-[420px] flex-col overflow-hidden">
+                  <div className="relative h-[240px] flex-shrink-0 bg-muted">
+                    <img src={item.image_url || "/placeholder.svg"} alt={item.title} className="h-full w-full object-cover" />
                   </div>
-                  <CardContent className="space-y-3 p-4">
+                  <CardContent className="flex flex-1 flex-col justify-between space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
-                        <p className="text-sm text-muted-foreground">{item.tag || "Uncategorized"}</p>
+                        <h3 className="line-clamp-1 text-lg font-semibold text-foreground">{item.tag || "Uncategorized"}</h3>
+                        <p className="line-clamp-2 text-sm text-muted-foreground">{item.title}</p>
                       </div>
                       <span className="rounded-full border border-border/60 px-3 py-1 text-xs text-muted-foreground">
                         {item.display_order}
                       </span>
                     </div>
-                    <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -384,7 +322,7 @@ export function GalleryManager({ token }: { token: string | null }) {
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit Gallery Image" : "Add Gallery Image"}</DialogTitle>
             <DialogDescription>
-              Upload an image, choose its category, and set how it appears in the gallery.
+              Paste a direct image link and choose the gallery category it belongs to.
             </DialogDescription>
           </DialogHeader>
 
@@ -394,11 +332,7 @@ export function GalleryManager({ token }: { token: string | null }) {
                 <Label>Image Preview</Label>
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/60 bg-muted">
                   {previewUrl ? (
-                    previewUrl.startsWith("blob:") ? (
-                      <img src={previewUrl} alt="Gallery preview" className="h-full w-full object-cover" />
-                    ) : (
-                      <Image src={previewUrl} alt="Gallery preview" fill className="object-cover" />
-                    )
+                    <img src={previewUrl} alt="Gallery preview" className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                       No image selected
@@ -408,19 +342,22 @@ export function GalleryManager({ token }: { token: string | null }) {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="galleryFile">Upload Image *</Label>
-                <Input id="galleryFile" type="file" accept="image/*" onChange={handleFileChange} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="galleryTitle">Title *</Label>
+                <Label htmlFor="galleryImageUrl">Image Link *</Label>
                 <Input
-                  id="galleryTitle"
-                  value={formState.title}
-                  onChange={(event) => setFormState((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="Gallery image title"
+                  id="galleryImageUrl"
+                  type="url"
+                  value={formState.imageUrl}
+                  onChange={(event) => {
+                    const nextUrl = event.target.value
+                    setFormState((current) => ({ ...current, imageUrl: nextUrl }))
+                    resetPreview(nextUrl.trim())
+                  }}
+                  placeholder="https://example.com/photo.jpg"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Paste a direct image URL. The gallery will use that link as-is.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -431,26 +368,21 @@ export function GalleryManager({ token }: { token: string | null }) {
                   onChange={(event) => setFormState((current) => ({ ...current, category: event.target.value }))}
                   className="surface-field h-12 w-full rounded-2xl px-4 text-sm text-foreground outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
                   required
+                  disabled={galleryCategoryItems.length === 0}
                 >
-                  {galleryCategories
-                    .filter((category) => category !== "All")
-                    .map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                  {galleryCategoryItems.length === 0 ? (
+                    <option value="">Create a gallery category first</option>
+                ) : (
+                    galleryCategoryItems.map((category) => (
+                      <option key={category.id} value={category.title}>
+                        {category.title}
                       </option>
-                    ))}
+                    ))
+                  )}
                 </select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="galleryDescription">Description *</Label>
-                <Textarea
-                  id="galleryDescription"
-                  value={formState.description}
-                  onChange={(event) => setFormState((current) => ({ ...current, description: event.target.value }))}
-                  placeholder="Short description shown in the gallery card"
-                  required
-                />
+                <p className="text-xs text-muted-foreground">
+                  This links the image to one of the gallery categories you manage below.
+                </p>
               </div>
 
               <div className="space-y-2">

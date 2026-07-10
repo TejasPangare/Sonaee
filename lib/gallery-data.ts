@@ -2,16 +2,7 @@ export type GalleryItem = {
   src: string
   title?: string
   description: string
-  category:
-    | 'Restaurant'
-    | 'Banquet Hall'
-    | 'Weddings'
-    | 'Reception'
-    | 'Engagement'
-    | 'Birthday'
-    | 'Food'
-    | 'Decoration'
-    | 'Stage Setup'
+  category: string
   aspect: string
 }
 
@@ -30,18 +21,22 @@ export const galleryCategories = [
 
 export type GalleryCategory = Exclude<(typeof galleryCategories)[number], 'All'>
 
-const galleryCategorySet = new Set<GalleryCategory>(
-  galleryCategories.filter((category): category is GalleryCategory => category !== 'All')
-)
-
 export type GalleryCollection = {
-  category: GalleryCategory
+  category: string
   title: string
   description: string
   ctaLabel: string
   ctaHref: string
   coverImage: GalleryItem
   items: GalleryItem[]
+}
+
+export type GalleryCategoryCard = {
+  title: string
+  description: string
+  displayOrder: number
+  ctaLabel: string
+  ctaHref: string
 }
 
 const categoryMeta: Record<
@@ -185,6 +180,14 @@ type GalleryContentItem = {
   metadata_json?: string | null
 }
 
+type GalleryCategoryContentItem = {
+  type: string
+  title: string
+  description?: string | null
+  display_order?: number | null
+  id?: number
+}
+
 export function mapContentItemsToGalleryItems(items: GalleryContentItem[]): GalleryItem[] {
   return items
     .filter((item) => item.type === 'gallery')
@@ -207,43 +210,78 @@ export function mapContentItemsToGalleryItems(items: GalleryContentItem[]): Gall
     })
 }
 
-export function buildGalleryCollections(items: GalleryItem[]): GalleryCollection[] {
-  return galleryCategories
-    .filter((category): category is GalleryCategory => category !== 'All')
-    .flatMap((category) => {
-      const categoryItems = items.filter((item) => item.category === category)
+export function mapContentItemsToGalleryCategories(items: GalleryCategoryContentItem[]): GalleryCategoryCard[] {
+  return items
+    .filter((item) => item.type === 'gallery_category' && item.title)
+    .sort((left, right) => (left.display_order || 0) - (right.display_order || 0) || (left.id || 0) - (right.id || 0))
+    .map((item) => {
+      const title = item.title.trim()
+      const fallbackMeta = getGalleryCategoryMeta(title)
 
-      if (categoryItems.length === 0) {
-        return []
+      return {
+        title,
+        description: item.description?.trim() || '',
+        displayOrder: item.display_order || 0,
+        ctaLabel: fallbackMeta.ctaLabel,
+        ctaHref: fallbackMeta.ctaHref,
       }
-
-      const meta = categoryMeta[category]
-
-      return [
-        {
-          category,
-          title: meta.title,
-          description: meta.description,
-          ctaLabel: meta.ctaLabel,
-          ctaHref: meta.ctaHref,
-          coverImage: categoryItems[0],
-          items: categoryItems,
-        },
-      ]
     })
 }
 
-export function getGalleryCategoryMeta(category: GalleryCategory) {
-  return categoryMeta[category]
+export function buildGalleryCollections(items: GalleryItem[], categories: GalleryCategoryCard[] = []): GalleryCollection[] {
+  const categoryCards =
+    categories.length > 0
+      ? categories
+      : [...new Map(items.map((item) => [item.category, item.category])).values()].map((category) => ({
+          title: category,
+          description: '',
+          displayOrder: 0,
+          ctaLabel: getGalleryCategoryMeta(category).ctaLabel,
+          ctaHref: getGalleryCategoryMeta(category).ctaHref,
+        }))
+
+  return categoryCards.flatMap((category) => {
+    const categoryItems = items.filter((item) => item.category === category.title)
+
+    if (categoryItems.length === 0) {
+      return []
+    }
+
+    return [
+      {
+        category: category.title,
+        title: category.title,
+        description: category.description || '',
+        ctaLabel: category.ctaLabel || getGalleryCategoryMeta(category.title).ctaLabel,
+        ctaHref: category.ctaHref || getGalleryCategoryMeta(category.title).ctaHref,
+        coverImage: categoryItems[0],
+        items: categoryItems,
+      },
+    ]
+  })
 }
 
-function getGalleryCategoryFromContent(item: GalleryContentItem): GalleryCategory | null {
-  const rawCategory = item.tag || item.subtitle || ''
-  if (!rawCategory || !galleryCategorySet.has(rawCategory as GalleryCategory)) {
+function getGalleryCategoryFromContent(item: GalleryContentItem): string | null {
+  const rawCategory = (item.tag || item.subtitle || '').trim()
+  if (!rawCategory) {
     return null
   }
 
-  return rawCategory as GalleryCategory
+  return rawCategory
+}
+
+function getGalleryCategoryMeta(category: string) {
+  const knownMeta = categoryMeta[category as GalleryCategory]
+  if (knownMeta) {
+    return knownMeta
+  }
+
+  return {
+    title: category,
+    description: '',
+    ctaLabel: 'View Collection',
+    ctaHref: '/gallery',
+  }
 }
 
 function parseGalleryAspect(metadataJson?: string | null) {

@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { GalleryCategoryManager } from '@/components/admin/gallery-category-manager'
 import { GalleryManager } from '@/components/admin/gallery-manager'
-import { EventCategoryManager } from '@/components/admin/event-category-manager'
 import { useAdmin } from '@/lib/admin-context'
 import { apiClient } from '@/lib/api-client'
 import {
@@ -241,9 +241,9 @@ export default function AdminContentPage() {
           </CardContent>
         </Card>
 
-        <GalleryManager token={token} />
+        <GalleryCategoryManager token={token} />
 
-        <EventCategoryManager token={token} />
+        <GalleryManager token={token} />
 
         {user?.is_superadmin ? (
           <Card>

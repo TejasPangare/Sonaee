@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Camera, Expand, ZoomIn, ZoomOut } from 'lucide-react'
@@ -146,14 +145,12 @@ export function GallerySection({
                 }}
                 className="group block w-full text-left"
               >
-                <div className={cardClass}>
-                  <div className={`relative overflow-hidden ${item.aspect}`}>
-                    <Image
+                  <div className={cardClass}>
+                    <div className={`relative overflow-hidden ${item.aspect}`}>
+                    <img
                       src={item.src}
                       alt={item.title || item.category}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/22 to-transparent transition-opacity duration-300 group-hover:from-black/72" />
                     <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/20 text-white backdrop-blur-md transition-transform duration-300 group-hover:scale-105">
@@ -164,8 +161,10 @@ export function GallerySection({
                         <Camera className="h-3.5 w-3.5" />
                         {item.category}
                       </div>
-                      {item.title ? <h3 className="mb-2 text-2xl text-white">{item.title}</h3> : null}
-                      <p className="max-w-md text-sm leading-6 text-white/80">{item.description}</p>
+                      {showCategoryTabs && item.title ? <h3 className="mb-2 text-2xl text-white">{item.title}</h3> : null}
+                      {showCategoryTabs && item.description ? (
+                        <p className="max-w-md text-sm leading-6 text-white/80">{item.description}</p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -221,13 +220,10 @@ export function GallerySection({
                           : 'relative aspect-[16/11] overflow-hidden bg-black transition-all duration-500'
                       }
                     >
-                      <Image
+                      <img
                         src={selectedItem.src}
                         alt={selectedItem.title || selectedItem.category}
-                        fill
-                        sizes="100vw"
-                        priority
-                        className={isZoomed ? 'object-contain' : 'object-cover transition-all duration-500'}
+                        className={isZoomed ? 'h-full w-full object-contain' : 'h-full w-full object-cover transition-all duration-500'}
                       />
                     </div>
                   </button>
@@ -256,16 +252,20 @@ export function GallerySection({
               </div>
 
               {!isZoomed && <div className="flex flex-col justify-between rounded-[1.5rem] border border-border/60 bg-card/82 p-6">
-                <div>
-                  <div className="mb-4 inline-flex rounded-full border border-border/60 bg-background/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-                    {selectedItem.category}
-                  </div>
-                  <DialogTitle className="mb-3 text-3xl text-foreground">
-                    {selectedItem.title || selectedItem.category}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm leading-7 text-muted-foreground">
-                    {selectedItem.description}
-                  </DialogDescription>
+                  <div>
+                    <div className="mb-4 inline-flex rounded-full border border-border/60 bg-background/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                      {selectedItem.category}
+                    </div>
+                      {showCategoryTabs && selectedItem.title ? (
+                        <DialogTitle className="mb-3 text-3xl text-foreground">
+                          {selectedItem.title}
+                        </DialogTitle>
+                      ) : null}
+                  {showCategoryTabs && selectedItem.description ? (
+                    <DialogDescription className="text-sm leading-7 text-muted-foreground">
+                      {selectedItem.description}
+                    </DialogDescription>
+                  ) : null}
                 </div>
 
                 <div className="mt-6 space-y-3">

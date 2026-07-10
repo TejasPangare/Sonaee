@@ -2,13 +2,16 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import { Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { CategoryTabs } from "@/components/customer/category-tabs"
 import { FeaturedDishesSection } from "@/components/customer/featured-dishes-section"
 import { MenuItemCard } from "@/components/customer/menu-item-card"
 import { AnimatedSection } from "@/components/ui/animated-section"
+import { Button } from "@/components/ui/button"
 import { apiClient, Category, MenuItemWithCategory } from "@/lib/api-client"
+
+const ITEMS_PER_PAGE = 12
 
 export default function MenuPage() {
   const searchParams = useSearchParams()
@@ -19,6 +22,7 @@ export default function MenuPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [menuItems, setMenuItems] = useState<MenuItemWithCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     async function fetchData() {
@@ -57,7 +61,40 @@ export default function MenuPage() {
     return items
   }, [activeCategory, searchQuery, menuItems])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeCategory, searchQuery])
+
   const activeCategories = categories.filter((c) => c.is_active)
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedItems = filteredItems.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE
+  )
+  const startItem = filteredItems.length === 0 ? 0 : (safeCurrentPage - 1) * ITEMS_PER_PAGE + 1
+  const endItem = Math.min(safeCurrentPage * ITEMS_PER_PAGE, filteredItems.length)
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1)
+    }
+
+    const startPage = Math.max(1, safeCurrentPage - 2)
+    const endPage = Math.min(totalPages, startPage + 4)
+    const adjustedStart = Math.max(1, endPage - 4)
+
+    return Array.from(
+      { length: endPage - adjustedStart + 1 },
+      (_, index) => adjustedStart + index
+    )
+  }, [safeCurrentPage, totalPages])
 
   return (
     <div className="py-8 md:py-12">
@@ -98,13 +135,65 @@ export default function MenuPage() {
         </AnimatedSection>
 
         {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.map((item, i) => (
-              <AnimatedSection key={item.id} animation="fade-up" delay={Math.min(i * 50, 300)}>
-                <MenuItemCard item={item} />
-              </AnimatedSection>
-            ))}
-          </div>
+          <>
+            <div className="mb-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                Showing {startItem}-{endItem} of {filteredItems.length} items
+              </p>
+              <p>
+                Page {safeCurrentPage} of {totalPages}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {paginatedItems.map((item, i) => (
+                <AnimatedSection key={item.id} animation="fade-up" delay={Math.min(i * 50, 300)}>
+                  <MenuItemCard item={item} />
+                </AnimatedSection>
+              ))}
+            </div>
+            {totalPages > 1 ? (
+              <div className="mt-10 flex flex-col items-stretch gap-4 sm:items-center">
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full rounded-full sm:w-auto"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={safeCurrentPage === 1}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    Previous
+                  </Button>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {pageNumbers.map((page) => (
+                      <Button
+                        key={page}
+                        variant={page === safeCurrentPage ? "default" : "outline"}
+                        size="sm"
+                        className="min-w-10 rounded-full"
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full rounded-full sm:w-auto"
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-center text-xs text-muted-foreground sm:text-sm">
+                  Tap through pages to browse more dishes on smaller screens.
+                </p>
+              </div>
+            ) : null}
+          </>
         ) : (
           <AnimatedSection animation="fade-in" className="py-16 text-center">
             <p className="text-lg text-muted-foreground">{isLoading ? "Loading menu..." : "No items found"}</p>
