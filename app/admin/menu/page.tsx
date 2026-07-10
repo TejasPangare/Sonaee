@@ -388,13 +388,15 @@ function MenuItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{Object.keys(item).length>0 ? "Edit Item" : "Add New Item"}</DialogTitle>
-          <DialogDescription>
-            {Object.keys(item).length>0
-              ? "Update the menu item details"
-              : "Fill in the details for the new menu item"}
-          </DialogDescription>
-        </DialogHeader>
+  <DialogTitle>
+    {item ? "Edit Item" : "Add New Item"}
+  </DialogTitle>
+  <DialogDescription>
+    {item
+      ? "Update the menu item details"
+      : "Fill in the details for the new menu item"}
+  </DialogDescription>
+</DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
